@@ -13,8 +13,24 @@ services:
     command: python app/manage.py runserver 0.0.0.0:8000
     ports:
       - "8000:8000"
-    env_file:
-      - env/.env
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=key
+      - DJANGO_ALLOWED_HOSTS=0.0.0.0
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_DATABASE=crypton
+      - DB_USER=postgres
+      - DB_PASSWORD=
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DATABASE=postgres
+      - CACHE_BACKEND=django_redis.cache.RedisCache
+      - CACHE_LOCATION=redis://0.0.0.0:6379/1
+      - CACHE_CLIENT_CLASS=django_redis.client.DefaultClient
+      - CACHE_KEY_PREFIX=key
+      - CACHE_HOST=sess
+      - CACHE_PORT=6379
+      - CACHE=redis
     depends_on:
       - db
       - sess
