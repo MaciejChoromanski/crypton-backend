@@ -37,11 +37,10 @@ RUN pip install virtualenv \
 RUN pip install --upgrade pip
 RUN pip install --no-cache /wheels/*
 
-COPY ./entrypoint.sh $crypton_HOME
 COPY . $APP_HOME
 
 RUN chown -R user:crypton $APP_HOME
 
 USER user
 
-ENTRYPOINT ["/home/crypton/web/entrypoint.sh"]
+ENTRYPOINT ["/home/crypton/web/docker/entrypoint.sh"]

@@ -18,4 +18,4 @@ RUN pip install virtualenv \
 RUN pip install -r requirements.txt
 RUN apk del .tmp-build-deps
 
-ENTRYPOINT ["./entrypoint.sh"]
+ENTRYPOINT ["./docker/entrypoint.sh"]
