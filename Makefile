@@ -14,7 +14,7 @@ test:
 	docker-compose run app sh -c "python app/manage.py test"
 
 lint:
-	docker-compose run app sh -c "pre-commit"
+	docker-compose run app sh -c "flake8"
 
 logs:
 	docker-compose logs -f
