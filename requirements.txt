@@ -6,6 +6,7 @@ Django==3.0.8
 django-redis==4.12.1
 djangorestframework==3.11.0
 filelock==3.0.12
+gunicorn==20.0.4
 identify==1.4.23
 nodeenv==1.4.0
 pre-commit==2.6.0
