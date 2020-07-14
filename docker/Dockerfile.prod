@@ -1,0 +1,46 @@
+# Dockerfile for production
+
+FROM python:3.8-alpine as builder
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+RUN mkdir /crypton
+WORKDIR /crypton
+
+COPY ./requirements.txt /crypton/requirements.txt
+RUN apk add --update --no-cache postgresql-client
+RUN apk add --update --no-cache --virtual .tmp-build-deps \
+        gcc libc-dev linux-headers postgresql-dev
+RUN pip install virtualenv \
+    && virtualenv venv \
+    && source venv/bin/activate
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /crypton/wheels -r requirements.txt
+RUN apk del .tmp-build-deps
+
+FROM python:3.8-alpine
+
+RUN mkdir /home/crypton
+RUN addgroup -S crypton && adduser -S user -G crypton
+
+ENV HOME=/home/crypton
+ENV APP_HOME=/home/crypton/web
+RUN mkdir $APP_HOME
+WORKDIR $APP_HOME
+
+RUN apk update && apk add libpq
+COPY --from=builder /crypton/wheels /wheels
+COPY --from=builder /crypton/requirements.txt .
+RUN pip install virtualenv \
+    && virtualenv venv \
+    && source venv/bin/activate
+RUN pip install --upgrade pip
+RUN pip install --no-cache /wheels/*
+
+COPY . $APP_HOME
+
+RUN chown -R user:crypton $APP_HOME
+
+USER user
+
+ENTRYPOINT ["/home/crypton/web/docker/entrypoint.sh"]
