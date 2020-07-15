@@ -10,13 +10,13 @@ class TestUser(TestCase):
     """Tests for the User model"""
 
     def test_create_user_with_email_successful(self):
-        crypto_key = 123456789
         username = 'test_username'
         email = 'test@testdomain.com'
         password = 'test_password'
         user = get_user_model().objects.create_user(
-            crypto_key=crypto_key, username=username,
-            email=email, password=password
+            username=username,
+            email=email,
+            password=password
         )
 
         self.assertEqual(user.email, email)
@@ -25,8 +25,9 @@ class TestUser(TestCase):
     def test_new_user_email_normalized(self):
         email = 'test@TESTDOMAIN.com'
         user = get_user_model().objects.create_user(
-            crypto_key=123456789, username='test_username',
-            email=email, password='test_password'
+            username='test_username',
+            email=email,
+            password='test_password'
         )
 
         self.assertEqual(user.email, email.lower())
@@ -34,14 +35,16 @@ class TestUser(TestCase):
     def test_new_user_invalid_email(self):
         with self.assertRaises(ValueError):
             get_user_model().objects.create_user(
-                crypto_key=123456789, username='test_username',
-                email=None, password='test_password'
+                username='test_username',
+                email=None,
+                password='test_password'
             )
 
     def test_create_new_superuser(self):
         user = get_user_model().objects.create_superuser(
-            crypto_key=123456789, username='test_username',
-            email='test@testdomain.com', password='test_password'
+            username='test_username',
+            email='test@testdomain.com',
+            password='test_password'
         )
 
         self.assertTrue(user.is_superuser)

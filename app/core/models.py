@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import random
+
 from django.contrib.auth.models import (
     BaseUserManager,
     AbstractBaseUser,
@@ -13,8 +15,7 @@ class UserManager(BaseUserManager):
     """Manager for the User model"""
 
     def create_user(
-            self, crypto_key: int, username: str,
-            email: str, password: str, **extra_fields
+            self, username: str, email: str, password: str, **extra_fields
     ) -> User:
         """Creates a user with a given email and a password"""
 
@@ -22,7 +23,7 @@ class UserManager(BaseUserManager):
             raise ValueError('Users must have an email address')
 
         user = self.model(
-            crypto_key=crypto_key, username=username,
+            crypto_key=self._generate_crypto_key(), username=username,
             email=self.normalize_email(email), **extra_fields
         )
         user.set_password(password)
@@ -31,16 +32,25 @@ class UserManager(BaseUserManager):
         return user
 
     def create_superuser(
-            self, crypto_key: int, username: str, email: str, password: str
+            self, username: str, email: str, password: str
     ) -> User:
         """Creates a superuser with a given email and a password"""
 
-        user = self.create_user(crypto_key, username, email, password)
+        user = self.create_user(username, email, password)
         user.is_staff = True
         user.is_superuser = True
         user.save(using=self._db)
 
         return user
+
+    def _generate_crypto_key(self) -> int:
+        """Generates crypto_key for a user"""
+
+        key = random.randint(100000000, 999999999)
+        if User.objects.filter(crypto_key=key).exists():
+            self._generate_crypto_key()
+
+        return key
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -61,3 +71,4 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
