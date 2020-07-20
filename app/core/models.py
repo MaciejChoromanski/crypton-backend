@@ -17,7 +17,7 @@ class UserManager(BaseUserManager):
     def create_user(
             self, username: str, email: str, password: str, **extra_fields
     ) -> User:
-        """Creates a user with a given email and a password"""
+        """Creates a user with a given username, email and password"""
 
         if not email:
             raise ValueError('Users must have an email address')
@@ -34,7 +34,7 @@ class UserManager(BaseUserManager):
     def create_superuser(
             self, username: str, email: str, password: str
     ) -> User:
-        """Creates a superuser with a given email and a password"""
+        """Creates a superuser with a given username, email and password"""
 
         user = self.create_user(username, email, password)
         user.is_staff = True
@@ -47,7 +47,7 @@ class UserManager(BaseUserManager):
         """Generates crypto_key for a user"""
 
         key = random.randint(100000000, 999999999)
-        if User.objects.filter(crypto_key=key).exists():
+        if self.filter(crypto_key=key).exists():
             self._generate_crypto_key()
 
         return key

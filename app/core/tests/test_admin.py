@@ -4,8 +4,11 @@ from django.urls import reverse
 
 
 class TestAdminSite(TestCase):
+    """Tests Admin site display features"""
 
-    def setUp(self):
+    def setUp(self) -> None:
+        """Creates Users for the tests"""
+
         self.client = Client()
         self.admin_user = get_user_model().objects.create_superuser(
             username='test_admin',
@@ -19,7 +22,9 @@ class TestAdminSite(TestCase):
             password='test_password',
         )
 
-    def test_users_listed(self):
+    def test_users_listed(self) -> None:
+        """Tests if Users are listed properly"""
+
         url = reverse('admin:core_user_changelist')
         response = self.client.get(url)
 
@@ -27,13 +32,17 @@ class TestAdminSite(TestCase):
         self.assertContains(response, self.user.username)
         self.assertContains(response, self.user.crypto_key)
 
-    def test_user_change_page(self):
+    def test_user_change_page(self) -> None:
+        """Tests if change_page for the User works properly"""
+
         url = reverse('admin:core_user_change', args=[self.user.id])
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
 
-    def test_create_user_page(self):
+    def test_create_user_page(self) -> None:
+        """Tests if add_page for the User works properly"""
+
         url = reverse('admin:core_user_add')
         response = self.client.get(url)
 
