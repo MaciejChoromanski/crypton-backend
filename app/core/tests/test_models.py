@@ -16,9 +16,7 @@ class TestUser(TestCase):
         email = 'test@testdomain.com'
         password = 'test_password'
         user = get_user_model().objects.create_user(
-            username=username,
-            email=email,
-            password=password
+            username=username, email=email, password=password
         )
 
         self.assertEqual(user.email, email)
@@ -29,9 +27,7 @@ class TestUser(TestCase):
 
         email = 'test@TESTDOMAIN.com'
         user = get_user_model().objects.create_user(
-            username='test_username',
-            email=email,
-            password='test_password'
+            username='test_username', email=email, password='test_password'
         )
 
         self.assertEqual(user.email, email.lower())
@@ -41,18 +37,16 @@ class TestUser(TestCase):
 
         with self.assertRaises(ValueError):
             get_user_model().objects.create_user(
-                username='test_username',
-                email=None,
-                password='test_password'
+                username='test_username', email=None, password='test_password'
             )
 
     def test_create_new_superuser(self) -> None:
         """Tests if superuser is created successfully"""
-        
+
         user = get_user_model().objects.create_superuser(
             username='test_username',
             email='test@testdomain.com',
-            password='test_password'
+            password='test_password',
         )
 
         self.assertTrue(user.is_superuser)

@@ -15,7 +15,7 @@ class UserManager(BaseUserManager):
     """Manager for the User model"""
 
     def create_user(
-            self, username: str, email: str, password: str, **extra_fields
+        self, username: str, email: str, password: str, **extra_fields
     ) -> User:
         """Creates a user with a given username, email and password"""
 
@@ -23,8 +23,10 @@ class UserManager(BaseUserManager):
             raise ValueError('Users must have an email address')
 
         user = self.model(
-            crypto_key=self._generate_crypto_key(), username=username,
-            email=self.normalize_email(email), **extra_fields
+            crypto_key=self._generate_crypto_key(),
+            username=username,
+            email=self.normalize_email(email),
+            **extra_fields
         )
         user.set_password(password)
         user.save(using=self._db)
@@ -32,7 +34,7 @@ class UserManager(BaseUserManager):
         return user
 
     def create_superuser(
-            self, username: str, email: str, password: str
+        self, username: str, email: str, password: str
     ) -> User:
         """Creates a superuser with a given username, email and password"""
 
@@ -59,9 +61,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     crypto_key = models.IntegerField(
         unique=True,
         validators=[
-            MinValueValidator(1000000000), MaxValueValidator(999999999)
+            MinValueValidator(1000000000),
+            MaxValueValidator(999999999),
         ],
-        help_text='Unique key for internal operations'
+        help_text='Unique key for internal operations',
     )
     username = models.CharField(max_length=255, unique=True)
     email = models.EmailField(max_length=255, unique=True)

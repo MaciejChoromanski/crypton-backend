@@ -65,9 +65,9 @@ class TestPublicUserApi(TestCase):
         response = self.client.post(CREATE_USER_URL, payload)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        user_exists = get_user_model().objects.filter(
-            email=payload['email']
-        ).exists()
+        user_exists = (
+            get_user_model().objects.filter(email=payload['email']).exists()
+        )
 
         self.assertFalse(user_exists)
 
@@ -90,7 +90,7 @@ class TestPrivateUserApi(TestCase):
         self.user = create_user(
             email='test@testdomain.com',
             password='test_password',
-            username='test_username'
+            username='test_username',
         )
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
@@ -101,10 +101,10 @@ class TestPrivateUserApi(TestCase):
         response = self.client.get(ME_URL)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {
-            'username': self.user.username,
-            'email': self.user.email
-        })
+        self.assertEqual(
+            response.data,
+            {'username': self.user.username, 'email': self.user.email},
+        )
 
     def test_post_me_not_allowed(self) -> None:
         """Tests if POST is not allowed for the 'user_me' view"""
@@ -118,10 +118,7 @@ class TestPrivateUserApi(TestCase):
     def test_update_user_profile(self) -> None:
         """Tests if User's profile is updated successfully"""
 
-        payload = {
-            'password': 'new_password',
-            'username': 'new_username'
-        }
+        payload = {'password': 'new_password', 'username': 'new_username'}
         response = self.client.patch(ME_URL, payload)
         self.user.refresh_from_db()
 
