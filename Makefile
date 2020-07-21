@@ -11,7 +11,7 @@ run_prod:
 	docker-compose -f docker-compose.prod.yml up
 
 test:
-	docker-compose run app sh -c "python app/manage.py test"
+	docker-compose run app sh -c "cd app && python manage.py test"
 
 lint:
 	docker-compose run app sh -c "flake8"
@@ -30,3 +30,6 @@ down:
 
 down_prod:
 	docker-compose -f docker-compose.prod.yml down
+
+makemigrations:
+	docker-compose run app sh -c "python app/manage.py makemigrations"

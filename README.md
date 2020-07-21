@@ -1,5 +1,7 @@
 # crypton
-Messaging app with end-to-end encryption
+Messaging app with end-to-end encryption written with Python 3.
+
+Current progress can be viewed on [Trello](https://trello.com/b/sl5VjPNP/crypton).
 
 ## Table of contents
 1. [Current stack](#current-stack)
