@@ -1,9 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 
-
-def sample_user(email='test@testdomain.com', password='test_password'):
-    return get_user_model().objects.create_user(email, password)
+from core.models import FriendRequest
 
 
 class TestUser(TestCase):
@@ -21,6 +19,8 @@ class TestUser(TestCase):
 
         self.assertEqual(user.email, email)
         self.assertTrue(user.check_password(password))
+        self.assertEqual(user.username, username)
+        self.assertEqual(user.friends_list, [])
 
     def test_new_user_email_normalized(self) -> None:
         """Tests if User's email is normalized"""
@@ -51,3 +51,27 @@ class TestUser(TestCase):
 
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
+
+
+class TestFriendRequest(TestCase):
+    """Tests for the FriendRequest model"""
+
+    def test_create_friend_request_successful(self) -> None:
+        """Tests if FriendRequest is created successfully"""
+
+        user_one = get_user_model().objects.create_user(
+            username='user_one',
+            email='user_one@testdomain.com',
+            password='password_one',
+        )
+        user_two = get_user_model().objects.create_user(
+            username='user_two',
+            email='user_two@testdomain.com',
+            password='password_two',
+        )
+        friends_request = FriendRequest.objects.create(
+            to_user=user_one, from_user=user_two
+        )
+
+        self.assertEqual(friends_request.to_user, user_one)
+        self.assertEqual(friends_request.from_user, user_two)
