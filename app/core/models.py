@@ -104,6 +104,10 @@ class FriendRequest(models.Model):
     from_user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='from_user'
     )
+    is_new = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ['to_user', 'from_user']
 
     def __repr__(self) -> str:
         """Representation of a FriendRequest object"""
