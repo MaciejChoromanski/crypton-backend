@@ -27,7 +27,7 @@ class UserManager(BaseUserManager):
             crypto_key=self._generate_crypto_key(),
             username=username,
             email=self.normalize_email(email),
-            **extra_fields
+            **extra_fields,
         )
         user.set_password(password)
         user.save(using=self._db)

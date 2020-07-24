@@ -3,7 +3,8 @@ from rest_framework.authentication import BasicAuthentication
 from rest_framework.generics import (
     CreateAPIView,
     RetrieveUpdateDestroyAPIView,
-    ListAPIView, get_object_or_404,
+    ListAPIView,
+    get_object_or_404,
 )
 from rest_framework.permissions import IsAuthenticated
 

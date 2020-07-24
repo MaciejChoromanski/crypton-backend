@@ -22,5 +22,5 @@ urlpatterns = [
         'friend_request/manage/<int:pk>/',
         views.ManageFriendRequestView.as_view(),
         name='friend_request_manage',
-    )
+    ),
 ]

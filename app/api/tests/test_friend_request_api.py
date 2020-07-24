@@ -61,8 +61,7 @@ class TestPublicFriendRequestAPI(TestCase):
         friend_request = FriendRequest.objects.create(**payload)
         response = self.client.get(
             reverse(
-                MANAGE_FRIEND_REQUEST_URL,
-                kwargs={'pk': friend_request.pk}
+                MANAGE_FRIEND_REQUEST_URL, kwargs={'pk': friend_request.pk}
             )
         )
 
@@ -136,8 +135,7 @@ class TestFriendRequestPrivateAPI(TestCase):
         friend_request = FriendRequest.objects.create(**payload)
         response = self.client.get(
             reverse(
-                MANAGE_FRIEND_REQUEST_URL,
-                kwargs={'pk': friend_request.pk}
+                MANAGE_FRIEND_REQUEST_URL, kwargs={'pk': friend_request.pk}
             )
         )
 
@@ -150,10 +148,9 @@ class TestFriendRequestPrivateAPI(TestCase):
         friend_request = FriendRequest.objects.create(**payload)
         response = self.client.patch(
             reverse(
-                MANAGE_FRIEND_REQUEST_URL,
-                kwargs={'pk': friend_request.pk}
+                MANAGE_FRIEND_REQUEST_URL, kwargs={'pk': friend_request.pk}
             ),
-            {'is_new': False}
+            {'is_new': False},
         )
         friend_request.refresh_from_db()
 
@@ -167,8 +164,7 @@ class TestFriendRequestPrivateAPI(TestCase):
         friend_request = FriendRequest.objects.create(**payload)
         response = self.client.delete(
             reverse(
-                MANAGE_FRIEND_REQUEST_URL,
-                kwargs={'pk': friend_request.pk}
+                MANAGE_FRIEND_REQUEST_URL, kwargs={'pk': friend_request.pk}
             )
         )
 
