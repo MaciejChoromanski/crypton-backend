@@ -1,3 +1,5 @@
+from typing import Dict
+
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -7,17 +9,13 @@ from rest_framework import status
 
 from core.models import User
 
+from .utils import create_user
+
 CREATE_USER_URL = reverse('api:user_create')
 ME_URL = reverse('api:user_me')
 
 
-def create_user(**params) -> User:
-    """Creates a User"""
-
-    return get_user_model().objects.create_user(**params)
-
-
-class TestPublicUserApi(TestCase):
+class TestPublicUserAPI(TestCase):
     """Tests for the public API for the User model"""
 
     def setUp(self) -> None:
@@ -71,17 +69,17 @@ class TestPublicUserApi(TestCase):
 
         self.assertFalse(user_exists)
 
-    def test_retrieve_user_forbidden(self) -> None:
+    def test_retrieve_user_unauthorized(self) -> None:
         """
         Tests what happens when not authenticated User requests 'user_me' view
         """
 
         response = self.client.get(ME_URL)
 
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class TestPrivateUserApi(TestCase):
+class TestPrivateUserAPI(TestCase):
     """Tests for the private API for the User model"""
 
     def setUp(self) -> None:
