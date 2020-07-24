@@ -2,12 +2,12 @@ from typing import Dict
 
 from django.contrib.auth import get_user_model
 
-from rest_framework import serializers
+from rest_framework.serializers import ModelSerializer
 
-from core.models import User
+from core.models import User, FriendRequest
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(ModelSerializer):
     """Serializer for the User model"""
 
     class Meta:
@@ -21,7 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
         return get_user_model().objects.create_user(**validated_data)
 
     def update(self, instance: User, validated_data: Dict) -> User:
-        """Updates User's password"""
+        """Updates User's data"""
 
         password = validated_data.pop('password', None)
         user = super().update(instance, validated_data)
@@ -31,3 +31,11 @@ class UserSerializer(serializers.ModelSerializer):
             user.save()
 
         return user
+
+
+class FriendRequestSerializer(ModelSerializer):
+    """Serializer for the FriendRequest model"""
+
+    class Meta:
+        model = FriendRequest
+        fields = '__all__'

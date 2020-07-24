@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import random
+from typing import List
 
 from django.contrib.auth.models import (
     BaseUserManager,
@@ -26,7 +27,7 @@ class UserManager(BaseUserManager):
             crypto_key=self._generate_crypto_key(),
             username=username,
             email=self.normalize_email(email),
-            **extra_fields
+            **extra_fields,
         )
         user.set_password(password)
         user.save(using=self._db)
@@ -70,8 +71,45 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    friends = models.ManyToManyField('self')
 
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
+
+    @property
+    def friends_list(self) -> List:
+        """Returns a list of friends"""
+
+        return list(self.friends.all())
+
+    def __str__(self) -> str:
+        """Returns User's username"""
+
+        return f'{self.username}'
+
+    def __repr__(self) -> str:
+        """Representation of a User object"""
+
+        return f'<User: {self.username}>'
+
+
+class FriendRequest(models.Model):
+    """A model for friend's requests from one User to another"""
+
+    to_user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='to_user'
+    )
+    from_user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='from_user'
+    )
+    is_new = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ['to_user', 'from_user']
+
+    def __repr__(self) -> str:
+        """Representation of a FriendRequest object"""
+
+        return f'<FriendRequest: to {self.to_user} from {self.from_user}>'
