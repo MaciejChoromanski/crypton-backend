@@ -90,7 +90,10 @@ class TestFriendRequestPrivateAPI(TestCase):
     def test_create_friend_request_successfully(self) -> None:
         """Tests if a FriendRequest is created successfully"""
 
-        payload = {'to_user': self.user_two.pk, 'from_user': self.user_one.pk}
+        payload = {
+            'crypto_key': self.user_two.crypto_key,
+            'from_user': self.user_one.pk
+        }
         response = self.client.post(CREATE_FRIEND_REQUEST_URL, payload)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -100,17 +103,33 @@ class TestFriendRequestPrivateAPI(TestCase):
         Tests if a FriendRequest is created when the same one already exists
         """
 
-        payload = {'to_user': self.user_two, 'from_user': self.user_one}
-        create_friend_request(**payload)
-        payload.update(to_user=self.user_two.pk, from_user=self.user_one.pk)
+        create_friend_request(
+            to_user=self.user_two, from_user=self.user_one
+        )
+        payload = {
+            'crypto_key': self.user_two.crypto_key,
+            'from_user': self.user_one.pk,
+        }
         response = self.client.post(CREATE_FRIEND_REQUEST_URL, payload)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(b'FriendRequest already exists', response.content)
+
+    def test_friend_request_no_crypto_key_provided(self) -> None:
+        """
+        Tests if a FriendRequest is created when 'crypto_key' isn't provided
+        """
+
+        payload = {'from_user': self.user_one.pk}
+        response = self.client.post(CREATE_FRIEND_REQUEST_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(b'No \'crypto_key\' provided', response.content)
 
     def test_list_friend_request_successfully(self) -> None:
         """Tests if a FriendRequest is listed successfully"""
 
-        payload = {'to_user': self.user_two, 'from_user': self.user_one}
+        payload = {'to_user': self.user_one, 'from_user': self.user_two}
         create_friend_request(**payload)
         response = self.client.get(LIST_FRIEND_REQUEST_URL)
 
@@ -128,10 +147,29 @@ class TestFriendRequestPrivateAPI(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_manage_friend_request_forbidden(self) -> None:
+        """
+        Tests what happens when User tries to
+        access FriendRequest, which was't meant for them
+        """
+
+        payload = {'to_user': self.user_two, 'from_user': self.user_one}
+        friend_request = FriendRequest.objects.create(**payload)
+        response = self.client.get(
+            reverse(
+                MANAGE_FRIEND_REQUEST_URL,
+                kwargs={'pk': friend_request.pk}
+            )
+        )
+        message = b'You don\'t have permission to manage this FriendRequest'
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn(message, response.content)
+
     def test_retrieve_friend_request_successfully(self) -> None:
         """Tests if a FriendRequest is retrieved successfully"""
 
-        payload = {'to_user': self.user_two, 'from_user': self.user_one}
+        payload = {'to_user': self.user_one, 'from_user': self.user_two}
         friend_request = FriendRequest.objects.create(**payload)
         response = self.client.get(
             reverse(
@@ -144,7 +182,7 @@ class TestFriendRequestPrivateAPI(TestCase):
     def test_update_friend_request_successfully(self) -> None:
         """Tests if a FriendRequest is updated successfully"""
 
-        payload = {'to_user': self.user_two, 'from_user': self.user_one}
+        payload = {'to_user': self.user_one, 'from_user': self.user_two}
         friend_request = FriendRequest.objects.create(**payload)
         response = self.client.patch(
             reverse(
@@ -160,7 +198,7 @@ class TestFriendRequestPrivateAPI(TestCase):
     def test_delete_friend_request_successfully(self) -> None:
         """Tests if a FriendRequest is deleted successfully"""
 
-        payload = {'to_user': self.user_two, 'from_user': self.user_one}
+        payload = {'to_user': self.user_one, 'from_user': self.user_two}
         friend_request = FriendRequest.objects.create(**payload)
         response = self.client.delete(
             reverse(
