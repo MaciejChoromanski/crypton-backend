@@ -1,5 +1,6 @@
 from django.db.models.query import QuerySet
 from rest_framework.authentication import BasicAuthentication
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import (
     CreateAPIView,
     RetrieveUpdateDestroyAPIView,
@@ -40,6 +41,24 @@ class CreateFriendRequestView(CreateAPIView):
     authentication_classes = (BasicAuthentication,)
     permission_classes = (IsAuthenticated,)
 
+    def perform_create(self, serializer):
+        """
+        Saves FriendRequest if 'crypto_key' was
+        provided and FriendRequest doesn't exist
+        """
+
+        data = self.request.data.copy()
+        crypto_key = data.get('crypto_key')
+        if not crypto_key:
+            raise ValidationError(detail='No \'crypto_key\' provided')
+        user = get_object_or_404(User, crypto_key=crypto_key)
+        friend_request_exists = FriendRequest.objects.filter(
+            to_user=user.pk, from_user=data['from_user']
+        ).exists()
+        if friend_request_exists:
+            raise ValidationError(detail='FriendRequest already exists')
+        serializer.save(to_user=user)
+
 
 class ListFriendRequestView(ListAPIView):
     """Endpoint for listing FriendRequest"""
@@ -62,6 +81,11 @@ class ManageFriendRequestView(RetrieveUpdateDestroyAPIView):
     permission_classes = (IsAuthenticated,)
 
     def get_object(self) -> FriendRequest:
-        """Returns a FriendRequest"""
+        """Returns a FriendRequest if it was meant for the logged in User"""
 
-        return get_object_or_404(FriendRequest, pk=self.kwargs['pk'])
+        friend_request = get_object_or_404(FriendRequest, pk=self.kwargs['pk'])
+        if self.request.user != friend_request.to_user:
+            message = 'You don\'t have permission to manage this FriendRequest'
+            raise PermissionDenied({'message': message})
+
+        return friend_request
