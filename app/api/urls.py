@@ -29,4 +29,9 @@ urlpatterns = [
         name='friend_create',
     ),
     path('friend/list/', views.ListFriendView.as_view(), name='friend_list'),
+    path(
+        'friend/manage/<int:pk>/',
+        views.ManageFriendView.as_view(),
+        name='friend_manage',
+    ),
 ]

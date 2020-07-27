@@ -10,6 +10,7 @@ from core.models import Friend
 
 CREATE_FRIEND_URL = reverse('api:friend_create')
 LIST_FRIEND_URL = reverse('api:friend_list')
+MANAGE_FRIEND_URL = 'api:friend_manage'
 
 
 class TestPublicFriendAPI(TestCase):
@@ -50,6 +51,19 @@ class TestPublicFriendAPI(TestCase):
         """Tests what happens if an anonymous User tries to list Friends"""
 
         response = self.client.get(LIST_FRIEND_URL)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_manage_friend_request_unauthorized(self) -> None:
+        """
+        Tests what happens if a FriendRequest is managed by an anonymous User
+        """
+
+        response = self.client.get(
+            reverse(
+                MANAGE_FRIEND_URL, kwargs={'pk': 1}
+            )
+        )
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -130,3 +144,78 @@ class TestPrivateFriendAPI(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
+
+    def test_manage_friend_does_not_exist(self) -> None:
+        """
+        Tests what happens when User tries to
+        access Friend, which doesn't exist
+        """
+
+        response = self.client.get(
+            reverse(MANAGE_FRIEND_URL, kwargs={'pk': 1})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_manage_friend_forbidden(self) -> None:
+        """
+        Tests what happens when User tries to
+        access FriendRequest, which was't meant for them
+        """
+
+        data = {'user': self.user_one, 'friend_of': self.user_two}
+        friend = create_friend(**data)
+        response = self.client.get(
+            reverse(MANAGE_FRIEND_URL, kwargs={'pk': friend.pk})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertIn(
+            b'You don\'t have permission to manage this Friend',
+            response.content
+        )
+
+    def test_retrieve_friend_successfully(self) -> None:
+        """Tests if a Friend is retrieved successfully"""
+
+        data = {'user': self.user_two, 'friend_of': self.user_one}
+        friend = create_friend(**data)
+        response = self.client.get(
+            reverse(MANAGE_FRIEND_URL, kwargs={'pk': friend.pk})
+        )
+        expected_result = {
+            'user': self.user_two.pk, 'friend_of': self.user_one.pk,
+            'users_nickname': None, 'is_blocked': False,
+        }
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, expected_result)
+
+    def test_update_friend_successfully(self) -> None:
+        """Tests if a Friend is updated successfully"""
+
+        data = {'user': self.user_two, 'friend_of': self.user_one}
+        friend = create_friend(**data)
+        payload = {'users_nickname': 'nickname', 'is_blocked': True}
+        response = self.client.patch(
+            reverse(MANAGE_FRIEND_URL, kwargs={'pk': friend.pk}), payload
+        )
+        friend.refresh_from_db()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(friend.users_nickname, 'nickname')
+        self.assertTrue(friend.is_blocked)
+
+    def test_delete_friend_successfully(self) -> None:
+        """Tests if a Friend is deleted successfully"""
+
+        data = {'user': self.user_two, 'friend_of': self.user_one}
+        friend = create_friend(**data)
+        response = self.client.delete(
+            reverse(MANAGE_FRIEND_URL, kwargs={'pk': friend.pk})
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(
+            Friend.objects.filter(pk=friend.pk).exists()
+        )

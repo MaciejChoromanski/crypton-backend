@@ -167,3 +167,21 @@ class ListFriendView(ListAPIView):
         """Returns a QueryFriends of User's friends"""
 
         return Friend.objects.filter(friend_of=self.request.user)
+
+
+class ManageFriendView(RetrieveUpdateDestroyAPIView):
+    """Endpoint for retrieving, updating and deleting Friend's data"""
+
+    serializer_class = FriendSerializer
+    authentication_classes = (BasicAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self) -> Friend:
+        """Returns a FriendRequest if it was meant for the logged in User"""
+
+        friend = get_object_or_404(Friend, pk=self.kwargs['pk'])
+        if self.request.user != friend.friend_of:
+            message = 'You don\'t have permission to manage this Friend'
+            raise PermissionDenied({'message': message})
+
+        return friend
