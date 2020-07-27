@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Union
 
 from django.db.models.query import QuerySet
 from rest_framework.authentication import BasicAuthentication
@@ -20,7 +20,9 @@ from api.serializers import (
 from core.models import User, FriendRequest, Friend
 
 
-def friend_request_existence(first_user_pk: int, second_user_pk: int) -> Dict:
+def friend_request_existence(
+        first_user_pk: Union[int, str], second_user_pk: Union[int, str]
+) -> Dict:
     """Checks if FriendRequest already exists"""
 
     friend_request_sent_by_user = FriendRequest.objects.filter(
@@ -70,20 +72,21 @@ class CreateFriendRequestView(CreateAPIView):
     authentication_classes = (BasicAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    def perform_create(self, serializer) -> None:
+    def get_serializer(self, *args, **kwargs):
         """
-        Saves FriendRequest if 'crypto_key' was
-        provided and FriendRequest doesn't exist
+        Returns serializer class after checking if 'crypto_key' was
+        provided and similar FriendRequest doesn't exist
         """
 
+        serializer_class = self.get_serializer_class()
+        kwargs["context"] = self.get_serializer_context()
         data = self.request.data.copy()
         crypto_key = data.get('crypto_key')
         if not crypto_key:
             raise ValidationError(detail='No \'crypto_key\' provided')
         user = get_object_or_404(User, crypto_key=crypto_key)
-        friend_request = friend_request_existence(
-            int(data['from_user']), user.pk
-        )
+        data['to_user'] = user.pk
+        friend_request = friend_request_existence(data['from_user'], user.pk)
         if friend_request['sent_by']:
             raise ValidationError(
                 detail='You have already sent a FriendRequest to this User'
@@ -92,7 +95,9 @@ class CreateFriendRequestView(CreateAPIView):
             raise ValidationError(
                 detail='This User has already sent you a FriendRequest'
             )
-        serializer.save(to_user=user)
+        kwargs['data'] = data
+
+        return serializer_class(*args, **kwargs)
 
 
 class ListFriendRequestView(ListAPIView):
@@ -138,7 +143,7 @@ class CreateFriendView(CreateAPIView):
 
         data = self.request.data
         friend_request = friend_request_existence(
-            int(data['friend_of']), int(data['user'])
+            data['friend_of'], data['user']
         ).get('instance')
         if not friend_request:
             raise ValidationError(

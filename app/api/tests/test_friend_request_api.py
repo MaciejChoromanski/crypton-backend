@@ -46,8 +46,6 @@ class TestPublicFriendRequestAPI(TestCase):
         Tests what happens if a FriendRequest is listed by an anonymous User
         """
 
-        data = {'to_user': self.user_one, 'from_user': self.user_two}
-        create_friend_request(**data)
         response = self.client.get(LIST_FRIEND_REQUEST_URL)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -98,7 +96,7 @@ class TestFriendRequestPrivateAPI(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_friend_request_already_exists_sent_by_user(self) -> None:
+    def test_create_friend_request_already_exists_sent_by_user(self) -> None:
         """
         Tests if a FriendRequest isn't created when the
         same one has already been sent by User
@@ -119,7 +117,7 @@ class TestFriendRequestPrivateAPI(TestCase):
             response.content
         )
 
-    def test_friend_request_already_exists_sent_to_user(self) -> None:
+    def test_create_friend_request_already_exists_sent_to_user(self) -> None:
         """
         Tests if a FriendRequest isn't created when the
         same one has already been sent to User
@@ -140,7 +138,7 @@ class TestFriendRequestPrivateAPI(TestCase):
             response.content
         )
 
-    def test_friend_request_no_crypto_key_provided(self) -> None:
+    def test_create_friend_request_no_crypto_key_provided(self) -> None:
         """
         Tests if a FriendRequest isn't created when 'crypto_key' isn't provided
         """
@@ -159,6 +157,7 @@ class TestFriendRequestPrivateAPI(TestCase):
         response = self.client.get(LIST_FRIEND_REQUEST_URL)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
 
     def test_manage_friend_request_does_not_exist(self) -> None:
         """
@@ -201,8 +200,13 @@ class TestFriendRequestPrivateAPI(TestCase):
                 MANAGE_FRIEND_REQUEST_URL, kwargs={'pk': friend_request.pk}
             )
         )
+        expected_data = {
+            'from_user': self.user_two.pk, 'to_user': self.user_one.pk,
+            'is_new': True, 'is_accepted': False,
+        }
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, expected_data)
 
     def test_update_friend_request_successfully(self) -> None:
         """Tests if a FriendRequest is updated successfully"""

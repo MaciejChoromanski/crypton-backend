@@ -13,6 +13,7 @@ class UserSerializer(ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('email', 'password', 'username')
+        read_only_fields = ('crypto_key', 'is_active', 'is_staff')
         extra_kwargs = {'password': {'write_only': True, 'min_length': 5}}
 
     def create(self, validated_data: Dict) -> User:
@@ -38,7 +39,7 @@ class FriendRequestSerializer(ModelSerializer):
 
     class Meta:
         model = FriendRequest
-        fields = ('from_user', 'is_new', 'is_accepted')
+        fields = ('from_user', 'to_user', 'is_new', 'is_accepted')
 
 
 class FriendSerializer(ModelSerializer):
