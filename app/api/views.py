@@ -1,3 +1,5 @@
+from typing import Dict, Union
+
 from django.db.models.query import QuerySet
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -7,18 +9,47 @@ from rest_framework.generics import (
     ListAPIView,
     get_object_or_404,
 )
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from api.serializers import UserSerializer, FriendRequestSerializer
+from api.serializers import (
+    UserSerializer,
+    FriendRequestSerializer,
+    FriendSerializer,
+)
 
-from core.models import User, FriendRequest
+from core.models import User, FriendRequest, Friend
+
+
+def friend_request_existence(
+    first_user_pk: Union[int, str], second_user_pk: Union[int, str]
+) -> Dict:
+    """Checks if FriendRequest already exists"""
+
+    friend_request_sent_by_user = FriendRequest.objects.filter(
+        to_user=second_user_pk, from_user=first_user_pk
+    )
+    friend_request_sent_to_user = FriendRequest.objects.filter(
+        to_user=first_user_pk, from_user=second_user_pk
+    )
+    if friend_request_sent_by_user:
+        friend_request = friend_request_sent_by_user[0]
+    elif friend_request_sent_to_user:
+        friend_request = friend_request_sent_to_user[0]
+    else:
+        friend_request = None
+
+    return {
+        'sent_by': friend_request_sent_by_user.exists(),
+        'sent_to': friend_request_sent_to_user.exists(),
+        'instance': friend_request,
+    }
 
 
 class CreateUserView(CreateAPIView):
     """Endpoint for creating new Users"""
 
     serializer_class = UserSerializer
-    queryset = User.objects.all()
+    permission_classes = (AllowAny,)
 
 
 class ManageUserView(RetrieveUpdateDestroyAPIView):
@@ -41,23 +72,32 @@ class CreateFriendRequestView(CreateAPIView):
     authentication_classes = (BasicAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    def perform_create(self, serializer):
+    def get_serializer(self, *args, **kwargs):
         """
-        Saves FriendRequest if 'crypto_key' was
-        provided and FriendRequest doesn't exist
+        Returns serializer class after checking if 'crypto_key' was
+        provided and similar FriendRequest doesn't exist
         """
 
+        serializer_class = self.get_serializer_class()
+        kwargs["context"] = self.get_serializer_context()
         data = self.request.data.copy()
         crypto_key = data.get('crypto_key')
         if not crypto_key:
             raise ValidationError(detail='No \'crypto_key\' provided')
         user = get_object_or_404(User, crypto_key=crypto_key)
-        friend_request_exists = FriendRequest.objects.filter(
-            to_user=user.pk, from_user=data['from_user']
-        ).exists()
-        if friend_request_exists:
-            raise ValidationError(detail='FriendRequest already exists')
-        serializer.save(to_user=user)
+        data['to_user'] = user.pk
+        friend_request = friend_request_existence(data['from_user'], user.pk)
+        if friend_request['sent_by']:
+            raise ValidationError(
+                detail='You have already sent a FriendRequest to this User'
+            )
+        elif friend_request['sent_to']:
+            raise ValidationError(
+                detail='This User has already sent you a FriendRequest'
+            )
+        kwargs['data'] = data
+
+        return serializer_class(*args, **kwargs)
 
 
 class ListFriendRequestView(ListAPIView):
@@ -89,3 +129,59 @@ class ManageFriendRequestView(RetrieveUpdateDestroyAPIView):
             raise PermissionDenied({'message': message})
 
         return friend_request
+
+
+class CreateFriendView(CreateAPIView):
+    """Endpoint for adding a new Friend"""
+
+    serializer_class = FriendSerializer
+    authentication_classes = (BasicAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def perform_create(self, serializer) -> None:
+        """Creates a new Friend if a FriendRequest exists and is accepted"""
+
+        data = self.request.data
+        friend_request = friend_request_existence(
+            data['friend_of'], data['user']
+        ).get('instance')
+        if not friend_request:
+            raise ValidationError(
+                detail='Can\'t create a Friend without a FriendRequest'
+            )
+        elif friend_request and not friend_request.is_accepted:
+            raise ValidationError(
+                detail='FriendRequest must be accepted to create a Friend'
+            )
+        serializer.save()
+
+
+class ListFriendView(ListAPIView):
+    """Endpoint for listing Friend"""
+
+    serializer_class = FriendSerializer
+    authentication_classes = (BasicAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self) -> QuerySet:
+        """Returns a QueryFriends of User's friends"""
+
+        return Friend.objects.filter(friend_of=self.request.user)
+
+
+class ManageFriendView(RetrieveUpdateDestroyAPIView):
+    """Endpoint for retrieving, updating and deleting Friend's data"""
+
+    serializer_class = FriendSerializer
+    authentication_classes = (BasicAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self) -> Friend:
+        """Returns a FriendRequest if it was meant for the logged in User"""
+
+        friend = get_object_or_404(Friend, pk=self.kwargs['pk'])
+        if self.request.user != friend.friend_of:
+            message = 'You don\'t have permission to manage this Friend'
+            raise PermissionDenied({'message': message})
+
+        return friend

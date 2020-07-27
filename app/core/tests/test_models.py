@@ -1,7 +1,9 @@
+from datetime import datetime
+
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 
-from core.models import FriendRequest
+from core.models import FriendRequest, Friend
 
 
 class TestUser(TestCase):
@@ -20,7 +22,6 @@ class TestUser(TestCase):
         self.assertEqual(user.email, email)
         self.assertTrue(user.check_password(password))
         self.assertEqual(user.username, username)
-        self.assertEqual(user.friends_list, [])
 
     def test_new_user_email_normalized(self) -> None:
         """Tests if User's email is normalized"""
@@ -76,3 +77,30 @@ class TestFriendRequest(TestCase):
         self.assertEqual(friends_request.to_user, user_one)
         self.assertEqual(friends_request.from_user, user_two)
         self.assertTrue(friends_request.is_new)
+        self.assertFalse(friends_request.is_accepted)
+        self.assertIsInstance(friends_request.created_on, datetime)
+
+
+class TestFriend(TestCase):
+    """Tests for the Friend model"""
+
+    def test_create_friend_successful(self) -> None:
+        """Tests if Friend is created successfully"""
+
+        user_one = get_user_model().objects.create_user(
+            username='user_one',
+            email='user_one@testdomain.com',
+            password='password_one',
+        )
+        user_two = get_user_model().objects.create_user(
+            username='user_two',
+            email='user_two@testdomain.com',
+            password='password_two',
+        )
+        friend = Friend.objects.create(user=user_two, friend_of=user_one)
+
+        self.assertEqual(friend.user, user_two)
+        self.assertIsNone(friend.users_nickname)
+        self.assertEqual(friend.friend_of, user_one)
+        self.assertIsInstance(friend.start_date, datetime)
+        self.assertFalse(friend.is_blocked)

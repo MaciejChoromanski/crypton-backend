@@ -1,6 +1,6 @@
 [flake8]
 exclude=
     venv,
-    */migrations,
+    app/core/migrations,
     */__pycache__,
     app/app

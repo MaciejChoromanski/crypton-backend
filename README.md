@@ -1,5 +1,5 @@
 # crypton
-Messaging app with end-to-end encryption written with Python 3.
+REST API for the messaging app with end-to-end encryption. Written with Python 3 and Django.
 
 Current progress can be viewed on [Trello](https://trello.com/b/sl5VjPNP/crypton).
 

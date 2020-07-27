@@ -34,6 +34,8 @@ class TestPublicUserAPI(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         user = get_user_model().objects.get(**response.data)
 
+        self.assertGreaterEqual(user.crypto_key, 100000000)
+        self.assertLessEqual(user.crypto_key, 999999999)
         self.assertTrue(user.check_password(payload['password']))
         self.assertNotIn('password', response.data)
 
@@ -95,12 +97,14 @@ class TestPrivateUserAPI(TestCase):
         """Tests if User's info is retrieved successfully"""
 
         response = self.client.get(ME_URL)
+        expected_result = {
+            'username': self.user.username,
+            'email': self.user.email,
+            'crypto_key': self.user.crypto_key,
+        }
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            response.data,
-            {'username': self.user.username, 'email': self.user.email},
-        )
+        self.assertEqual(response.data, expected_result)
 
     def test_post_me_not_allowed(self) -> None:
         """Tests if POST is not allowed for the 'user_me' view"""
