@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 
 from rest_framework.serializers import ModelSerializer
 
-from core.models import User, FriendRequest
+from core.models import User, FriendRequest, Friend
 
 
 class UserSerializer(ModelSerializer):
@@ -39,3 +39,11 @@ class FriendRequestSerializer(ModelSerializer):
     class Meta:
         model = FriendRequest
         fields = ('from_user', 'is_new', 'is_accepted')
+
+
+class FriendSerializer(ModelSerializer):
+    """Serializer for the Friend model"""
+
+    class Meta:
+        model = Friend
+        fields = ('user', 'users_nickname', 'friend_of', 'is_blocked')
