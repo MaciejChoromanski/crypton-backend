@@ -109,7 +109,7 @@ class FriendRequest(models.Model):
         """Representation of a FriendRequest object"""
 
         return f'<FriendRequest: to {self.to_user} from {self.from_user}>'
-    
+
 
 class Friend(models.Model):
     """A model for User's friends"""
@@ -128,4 +128,3 @@ class Friend(models.Model):
         """Representation of a Friend object"""
 
         return f'<Friend: {self.user}, friend of {self.friend_of}>'
-

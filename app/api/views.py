@@ -21,7 +21,7 @@ from core.models import User, FriendRequest, Friend
 
 
 def friend_request_existence(
-        first_user_pk: Union[int, str], second_user_pk: Union[int, str]
+    first_user_pk: Union[int, str], second_user_pk: Union[int, str]
 ) -> Dict:
     """Checks if FriendRequest already exists"""
 

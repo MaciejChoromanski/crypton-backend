@@ -60,9 +60,7 @@ class TestPublicFriendAPI(TestCase):
         """
 
         response = self.client.get(
-            reverse(
-                MANAGE_FRIEND_URL, kwargs={'pk': 1}
-            )
+            reverse(MANAGE_FRIEND_URL, kwargs={'pk': 1})
         )
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -107,10 +105,7 @@ class TestPrivateFriendAPI(TestCase):
         the FriendRequest hasn't been accepted
         """
 
-        data = {
-            'to_user': self.user_one,
-            'from_user': self.user_two,
-        }
+        data = {'to_user': self.user_one, 'from_user': self.user_two}
         create_friend_request(**data)
         payload = {'user': self.user_two.pk, 'friend_of': self.user_one.pk}
         response = self.client.post(CREATE_FRIEND_URL, payload)
@@ -118,7 +113,7 @@ class TestPrivateFriendAPI(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(
             b'FriendRequest must be accepted to create a Friend',
-            response.content
+            response.content,
         )
 
     def test_create_friend_not_sent_friend_request(self) -> None:
@@ -172,7 +167,7 @@ class TestPrivateFriendAPI(TestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertIn(
             b'You don\'t have permission to manage this Friend',
-            response.content
+            response.content,
         )
 
     def test_retrieve_friend_successfully(self) -> None:
@@ -184,8 +179,10 @@ class TestPrivateFriendAPI(TestCase):
             reverse(MANAGE_FRIEND_URL, kwargs={'pk': friend.pk})
         )
         expected_result = {
-            'user': self.user_two.pk, 'friend_of': self.user_one.pk,
-            'users_nickname': None, 'is_blocked': False,
+            'user': self.user_two.pk,
+            'friend_of': self.user_one.pk,
+            'users_nickname': None,
+            'is_blocked': False,
         }
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -216,6 +213,4 @@ class TestPrivateFriendAPI(TestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertFalse(
-            Friend.objects.filter(pk=friend.pk).exists()
-        )
+        self.assertFalse(Friend.objects.filter(pk=friend.pk).exists())

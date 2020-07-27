@@ -97,9 +97,7 @@ class TestFriend(TestCase):
             email='user_two@testdomain.com',
             password='password_two',
         )
-        friend = Friend.objects.create(
-            user=user_two, friend_of=user_one
-        )
+        friend = Friend.objects.create(user=user_two, friend_of=user_one)
 
         self.assertEqual(friend.user, user_two)
         self.assertIsNone(friend.users_nickname)

@@ -90,7 +90,7 @@ class TestFriendRequestPrivateAPI(TestCase):
 
         payload = {
             'crypto_key': self.user_two.crypto_key,
-            'from_user': self.user_one.pk
+            'from_user': self.user_one.pk,
         }
         response = self.client.post(CREATE_FRIEND_REQUEST_URL, payload)
 
@@ -102,9 +102,7 @@ class TestFriendRequestPrivateAPI(TestCase):
         same one has already been sent by User
         """
 
-        create_friend_request(
-            to_user=self.user_two, from_user=self.user_one
-        )
+        create_friend_request(to_user=self.user_two, from_user=self.user_one)
         payload = {
             'crypto_key': self.user_two.crypto_key,
             'from_user': self.user_one.pk,
@@ -114,7 +112,7 @@ class TestFriendRequestPrivateAPI(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(
             b'You have already sent a FriendRequest to this User',
-            response.content
+            response.content,
         )
 
     def test_create_friend_request_already_exists_sent_to_user(self) -> None:
@@ -123,9 +121,7 @@ class TestFriendRequestPrivateAPI(TestCase):
         same one has already been sent to User
         """
 
-        create_friend_request(
-            to_user=self.user_two, from_user=self.user_one
-        )
+        create_friend_request(to_user=self.user_two, from_user=self.user_one)
         payload = {
             'crypto_key': self.user_one.crypto_key,
             'from_user': self.user_two.pk,
@@ -134,8 +130,7 @@ class TestFriendRequestPrivateAPI(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(
-            b'This User has already sent you a FriendRequest',
-            response.content
+            b'This User has already sent you a FriendRequest', response.content
         )
 
     def test_create_friend_request_no_crypto_key_provided(self) -> None:
@@ -181,8 +176,7 @@ class TestFriendRequestPrivateAPI(TestCase):
         friend_request = create_friend_request(**data)
         response = self.client.get(
             reverse(
-                MANAGE_FRIEND_REQUEST_URL,
-                kwargs={'pk': friend_request.pk}
+                MANAGE_FRIEND_REQUEST_URL, kwargs={'pk': friend_request.pk}
             )
         )
         message = b'You don\'t have permission to manage this FriendRequest'
@@ -201,8 +195,10 @@ class TestFriendRequestPrivateAPI(TestCase):
             )
         )
         expected_data = {
-            'from_user': self.user_two.pk, 'to_user': self.user_one.pk,
-            'is_new': True, 'is_accepted': False,
+            'from_user': self.user_two.pk,
+            'to_user': self.user_one.pk,
+            'is_new': True,
+            'is_accepted': False,
         }
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
