@@ -4,11 +4,12 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework import status
 
-from .utils import create_user, create_friend_request
+from .utils import create_user, create_friend_request, create_friend
 
-from core.models import Friend, FriendRequest
+from core.models import Friend
 
 CREATE_FRIEND_URL = reverse('api:friend_create')
+LIST_FRIEND_URL = reverse('api:friend_list')
 
 
 class TestPublicFriendAPI(TestCase):
@@ -42,6 +43,13 @@ class TestPublicFriendAPI(TestCase):
         create_friend_request(**data)
         payload = {'user': self.user_two, 'friend_of': self.user_two}
         response = self.client.post(CREATE_FRIEND_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_list_friend_unauthorized(self) -> None:
+        """Tests what happens if an anonymous User tries to list Friends"""
+
+        response = self.client.get(LIST_FRIEND_URL)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -112,3 +120,13 @@ class TestPrivateFriendAPI(TestCase):
         self.assertIn(
             b'Can\'t create a Friend without a FriendRequest', response.content
         )
+
+    def test_list_friend_successfully(self) -> None:
+        """Tests if a Friend is listed successfully"""
+
+        data = {'user': self.user_two, 'friend_of': self.user_one}
+        create_friend(**data)
+        response = self.client.get(LIST_FRIEND_URL)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)

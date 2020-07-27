@@ -28,4 +28,5 @@ urlpatterns = [
         views.CreateFriendView.as_view(),
         name='friend_create',
     ),
+    path('friend/list/', views.ListFriendView.as_view(), name='friend_list'),
 ]

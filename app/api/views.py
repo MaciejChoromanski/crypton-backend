@@ -154,3 +154,16 @@ class CreateFriendView(CreateAPIView):
                 detail='FriendRequest must be accepted to create a Friend'
             )
         serializer.save()
+
+
+class ListFriendView(ListAPIView):
+    """Endpoint for listing Friend"""
+
+    serializer_class = FriendSerializer
+    authentication_classes = (BasicAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self) -> QuerySet:
+        """Returns a QueryFriends of User's friends"""
+
+        return Friend.objects.filter(friend_of=self.request.user)
