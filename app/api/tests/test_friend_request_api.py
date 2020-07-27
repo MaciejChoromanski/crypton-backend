@@ -98,9 +98,10 @@ class TestFriendRequestPrivateAPI(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_friend_request_already_exists(self) -> None:
+    def test_friend_request_already_exists_sent_by_user(self) -> None:
         """
-        Tests if a FriendRequest is created when the same one already exists
+        Tests if a FriendRequest is created when the
+        same one has already been sent by User
         """
 
         create_friend_request(
@@ -113,7 +114,31 @@ class TestFriendRequestPrivateAPI(TestCase):
         response = self.client.post(CREATE_FRIEND_REQUEST_URL, payload)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(b'FriendRequest already exists', response.content)
+        self.assertIn(
+            b'You have already sent a FriendRequest to this User',
+            response.content
+        )
+
+    def test_friend_request_already_exists_sent_to_user(self) -> None:
+        """
+        Tests if a FriendRequest is created when the
+        same one has already been sent to User
+        """
+
+        create_friend_request(
+            to_user=self.user_two, from_user=self.user_one
+        )
+        payload = {
+            'crypto_key': self.user_one.crypto_key,
+            'from_user': self.user_two.pk,
+        }
+        response = self.client.post(CREATE_FRIEND_REQUEST_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            b'This User has already sent you a FriendRequest',
+            response.content
+        )
 
     def test_friend_request_no_crypto_key_provided(self) -> None:
         """

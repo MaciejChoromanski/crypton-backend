@@ -55,11 +55,20 @@ class CreateFriendRequestView(CreateAPIView):
         if not crypto_key:
             raise ValidationError(detail='No \'crypto_key\' provided')
         user = get_object_or_404(User, crypto_key=crypto_key)
-        friend_request_exists = FriendRequest.objects.filter(
+        friend_request_sent_by_user = FriendRequest.objects.filter(
             to_user=user.pk, from_user=data['from_user']
         ).exists()
-        if friend_request_exists:
-            raise ValidationError(detail='FriendRequest already exists')
+        friend_request_sent_to_user = FriendRequest.objects.filter(
+            to_user=data['from_user'], from_user=user.pk
+        ).exists()
+        if friend_request_sent_by_user:
+            raise ValidationError(
+                detail='You have already sent a FriendRequest to this User'
+            )
+        elif friend_request_sent_to_user:
+            raise ValidationError(
+                detail='This User has already sent you a FriendRequest'
+            )
         serializer.save(to_user=user)
 
 
