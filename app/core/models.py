@@ -65,6 +65,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             MinValueValidator(1000000000),
             MaxValueValidator(999999999),
         ],
+        editable=False,
         help_text='Unique key for internal operations',
     )
     username = models.CharField(max_length=255, unique=True)
