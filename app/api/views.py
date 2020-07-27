@@ -1,3 +1,5 @@
+from typing import Dict
+
 from django.db.models.query import QuerySet
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -12,9 +14,33 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from api.serializers import (
     UserSerializer,
     FriendRequestSerializer,
+    FriendSerializer,
 )
 
-from core.models import User, FriendRequest
+from core.models import User, FriendRequest, Friend
+
+
+def friend_request_existence(first_user_pk: int, second_user_pk: int) -> Dict:
+    """Checks if FriendRequest already exists"""
+
+    friend_request_sent_by_user = FriendRequest.objects.filter(
+        to_user=second_user_pk, from_user=first_user_pk
+    )
+    friend_request_sent_to_user = FriendRequest.objects.filter(
+        to_user=first_user_pk, from_user=second_user_pk
+    )
+    if friend_request_sent_by_user:
+        friend_request = friend_request_sent_by_user[0]
+    elif friend_request_sent_to_user:
+        friend_request = friend_request_sent_to_user[0]
+    else:
+        friend_request = None
+
+    return {
+        'sent_by': friend_request_sent_by_user.exists(),
+        'sent_to': friend_request_sent_to_user.exists(),
+        'instance': friend_request,
+    }
 
 
 class CreateUserView(CreateAPIView):
@@ -55,17 +81,14 @@ class CreateFriendRequestView(CreateAPIView):
         if not crypto_key:
             raise ValidationError(detail='No \'crypto_key\' provided')
         user = get_object_or_404(User, crypto_key=crypto_key)
-        friend_request_sent_by_user = FriendRequest.objects.filter(
-            to_user=user.pk, from_user=data['from_user']
-        ).exists()
-        friend_request_sent_to_user = FriendRequest.objects.filter(
-            to_user=data['from_user'], from_user=user.pk
-        ).exists()
-        if friend_request_sent_by_user:
+        friend_request = friend_request_existence(
+            int(data['from_user']), user.pk
+        )
+        if friend_request['sent_by']:
             raise ValidationError(
                 detail='You have already sent a FriendRequest to this User'
             )
-        elif friend_request_sent_to_user:
+        elif friend_request['sent_to']:
             raise ValidationError(
                 detail='This User has already sent you a FriendRequest'
             )
@@ -101,3 +124,28 @@ class ManageFriendRequestView(RetrieveUpdateDestroyAPIView):
             raise PermissionDenied({'message': message})
 
         return friend_request
+
+
+class CreateFriendView(CreateAPIView):
+    """Endpoint for adding a new Friend"""
+
+    serializer_class = FriendSerializer
+    authentication_classes = (BasicAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def perform_create(self, serializer) -> None:
+        """Creates a new Friend if a FriendRequest exists and is accepted"""
+
+        data = self.request.data
+        friend_request = friend_request_existence(
+            int(data['friend_of']), int(data['user'])
+        ).get('instance')
+        if not friend_request:
+            raise ValidationError(
+                detail='Can\'t create a Friend without a FriendRequest'
+            )
+        elif friend_request and not friend_request.is_accepted:
+            raise ValidationError(
+                detail='FriendRequest must be accepted to create a Friend'
+            )
+        serializer.save()

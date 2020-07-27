@@ -23,4 +23,9 @@ urlpatterns = [
         views.ManageFriendRequestView.as_view(),
         name='friend_request_manage',
     ),
+    path(
+        'friend/create/',
+        views.CreateFriendView.as_view(),
+        name='friend_create',
+    ),
 ]
