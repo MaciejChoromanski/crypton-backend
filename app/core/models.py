@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import random
-from typing import List
 
 from django.contrib.auth.models import (
     BaseUserManager,
@@ -10,6 +9,7 @@ from django.contrib.auth.models import (
 )
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.utils.timezone import now
 
 
 class UserManager(BaseUserManager):
@@ -71,18 +71,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    friends = models.ManyToManyField('self')
 
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
-
-    @property
-    def friends_list(self) -> List:
-        """Returns a list of friends"""
-
-        return list(self.friends.all())
 
     def __str__(self) -> str:
         """Returns User's username"""
@@ -113,3 +106,23 @@ class FriendRequest(models.Model):
         """Representation of a FriendRequest object"""
 
         return f'<FriendRequest: to {self.to_user} from {self.from_user}>'
+    
+
+class Friend(models.Model):
+    """A model for User's friends"""
+
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='user'
+    )
+    users_nickname = models.CharField(max_length=255, null=True, default=None)
+    friend_of = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='friend_of'
+    )
+    start_date = models.DateField(default=now, editable=False)
+    is_blocked = models.BooleanField(default=False)
+
+    def __repr__(self):
+        """Representation of a Friend object"""
+
+        return f'<Friend: {self.user}, friend of {self.friend_of}>'
+
