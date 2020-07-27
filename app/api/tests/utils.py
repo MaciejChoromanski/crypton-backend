@@ -12,4 +12,4 @@ def create_user(**params: str) -> User:
 def create_friend_request(**params: User) -> FriendRequest:
     """Creates a FriendRequest with a given params"""
 
-    FriendRequest.objects.create(**params)
+    return FriendRequest.objects.create(**params)

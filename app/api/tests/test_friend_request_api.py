@@ -17,7 +17,7 @@ class TestPublicFriendRequestAPI(TestCase):
     """Tests for the public API for the FriendRequest model"""
 
     def setUp(self) -> None:
-        """Sets up the APIClient for the tests"""
+        """Sets up the APIClient for the tests and creates users"""
 
         self.user_one = create_user(
             email='one@testdomain.com',
@@ -46,8 +46,8 @@ class TestPublicFriendRequestAPI(TestCase):
         Tests what happens if a FriendRequest is listed by an anonymous User
         """
 
-        payload = {'to_user': self.user_one, 'from_user': self.user_two}
-        create_friend_request(**payload)
+        data = {'to_user': self.user_one, 'from_user': self.user_two}
+        create_friend_request(**data)
         response = self.client.get(LIST_FRIEND_REQUEST_URL)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -57,8 +57,8 @@ class TestPublicFriendRequestAPI(TestCase):
         Tests what happens if a FriendRequest is managed by an anonymous User
         """
 
-        payload = {'to_user': self.user_one, 'from_user': self.user_two}
-        friend_request = FriendRequest.objects.create(**payload)
+        data = {'to_user': self.user_one, 'from_user': self.user_two}
+        friend_request = create_friend_request(**data)
         response = self.client.get(
             reverse(
                 MANAGE_FRIEND_REQUEST_URL, kwargs={'pk': friend_request.pk}
@@ -100,7 +100,7 @@ class TestFriendRequestPrivateAPI(TestCase):
 
     def test_friend_request_already_exists_sent_by_user(self) -> None:
         """
-        Tests if a FriendRequest is created when the
+        Tests if a FriendRequest isn't created when the
         same one has already been sent by User
         """
 
@@ -121,7 +121,7 @@ class TestFriendRequestPrivateAPI(TestCase):
 
     def test_friend_request_already_exists_sent_to_user(self) -> None:
         """
-        Tests if a FriendRequest is created when the
+        Tests if a FriendRequest isn't created when the
         same one has already been sent to User
         """
 
@@ -142,7 +142,7 @@ class TestFriendRequestPrivateAPI(TestCase):
 
     def test_friend_request_no_crypto_key_provided(self) -> None:
         """
-        Tests if a FriendRequest is created when 'crypto_key' isn't provided
+        Tests if a FriendRequest isn't created when 'crypto_key' isn't provided
         """
 
         payload = {'from_user': self.user_one.pk}
@@ -154,8 +154,8 @@ class TestFriendRequestPrivateAPI(TestCase):
     def test_list_friend_request_successfully(self) -> None:
         """Tests if a FriendRequest is listed successfully"""
 
-        payload = {'to_user': self.user_one, 'from_user': self.user_two}
-        create_friend_request(**payload)
+        data = {'to_user': self.user_one, 'from_user': self.user_two}
+        create_friend_request(**data)
         response = self.client.get(LIST_FRIEND_REQUEST_URL)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -178,8 +178,8 @@ class TestFriendRequestPrivateAPI(TestCase):
         access FriendRequest, which was't meant for them
         """
 
-        payload = {'to_user': self.user_two, 'from_user': self.user_one}
-        friend_request = FriendRequest.objects.create(**payload)
+        data = {'to_user': self.user_two, 'from_user': self.user_one}
+        friend_request = create_friend_request(**data)
         response = self.client.get(
             reverse(
                 MANAGE_FRIEND_REQUEST_URL,
@@ -194,8 +194,8 @@ class TestFriendRequestPrivateAPI(TestCase):
     def test_retrieve_friend_request_successfully(self) -> None:
         """Tests if a FriendRequest is retrieved successfully"""
 
-        payload = {'to_user': self.user_one, 'from_user': self.user_two}
-        friend_request = FriendRequest.objects.create(**payload)
+        data = {'to_user': self.user_one, 'from_user': self.user_two}
+        friend_request = create_friend_request(**data)
         response = self.client.get(
             reverse(
                 MANAGE_FRIEND_REQUEST_URL, kwargs={'pk': friend_request.pk}
@@ -207,8 +207,8 @@ class TestFriendRequestPrivateAPI(TestCase):
     def test_update_friend_request_successfully(self) -> None:
         """Tests if a FriendRequest is updated successfully"""
 
-        payload = {'to_user': self.user_one, 'from_user': self.user_two}
-        friend_request = FriendRequest.objects.create(**payload)
+        data = {'to_user': self.user_one, 'from_user': self.user_two}
+        friend_request = create_friend_request(**data)
         response = self.client.patch(
             reverse(
                 MANAGE_FRIEND_REQUEST_URL, kwargs={'pk': friend_request.pk}
@@ -224,8 +224,8 @@ class TestFriendRequestPrivateAPI(TestCase):
     def test_delete_friend_request_successfully(self) -> None:
         """Tests if a FriendRequest is deleted successfully"""
 
-        payload = {'to_user': self.user_one, 'from_user': self.user_two}
-        friend_request = FriendRequest.objects.create(**payload)
+        data = {'to_user': self.user_one, 'from_user': self.user_two}
+        friend_request = create_friend_request(**data)
         response = self.client.delete(
             reverse(
                 MANAGE_FRIEND_REQUEST_URL, kwargs={'pk': friend_request.pk}
