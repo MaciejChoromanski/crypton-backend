@@ -38,4 +38,4 @@ class FriendRequestSerializer(ModelSerializer):
 
     class Meta:
         model = FriendRequest
-        fields = ('from_user', 'is_new')
+        fields = ('from_user', 'is_new', 'is_accepted')

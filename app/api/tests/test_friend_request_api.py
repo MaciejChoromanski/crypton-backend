@@ -188,12 +188,13 @@ class TestFriendRequestPrivateAPI(TestCase):
             reverse(
                 MANAGE_FRIEND_REQUEST_URL, kwargs={'pk': friend_request.pk}
             ),
-            {'is_new': False},
+            {'is_new': False, 'is_accepted': True},
         )
         friend_request.refresh_from_db()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(friend_request.is_new)
+        self.assertTrue(friend_request.is_accepted)
 
     def test_delete_friend_request_successfully(self) -> None:
         """Tests if a FriendRequest is deleted successfully"""

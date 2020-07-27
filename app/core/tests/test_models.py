@@ -77,6 +77,8 @@ class TestFriendRequest(TestCase):
         self.assertEqual(friends_request.to_user, user_one)
         self.assertEqual(friends_request.from_user, user_two)
         self.assertTrue(friends_request.is_new)
+        self.assertFalse(friends_request.is_accepted)
+        self.assertIsInstance(friends_request.created_on, datetime)
 
 
 class TestFriend(TestCase):

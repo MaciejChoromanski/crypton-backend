@@ -7,9 +7,12 @@ from rest_framework.generics import (
     ListAPIView,
     get_object_or_404,
 )
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from api.serializers import UserSerializer, FriendRequestSerializer
+from api.serializers import (
+    UserSerializer,
+    FriendRequestSerializer,
+)
 
 from core.models import User, FriendRequest
 
@@ -18,7 +21,7 @@ class CreateUserView(CreateAPIView):
     """Endpoint for creating new Users"""
 
     serializer_class = UserSerializer
-    queryset = User.objects.all()
+    permission_classes = (AllowAny,)
 
 
 class ManageUserView(RetrieveUpdateDestroyAPIView):
@@ -41,7 +44,7 @@ class CreateFriendRequestView(CreateAPIView):
     authentication_classes = (BasicAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer) -> None:
         """
         Saves FriendRequest if 'crypto_key' was
         provided and FriendRequest doesn't exist

@@ -98,6 +98,8 @@ class FriendRequest(models.Model):
         User, on_delete=models.CASCADE, related_name='from_user'
     )
     is_new = models.BooleanField(default=True)
+    is_accepted = models.BooleanField(default=False)
+    created_on = models.DateField(default=now, editable=False)
 
     class Meta:
         unique_together = ['to_user', 'from_user']
