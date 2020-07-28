@@ -40,7 +40,7 @@ class TestPublicTokenAPI(TestCase):
         create_user(
             username='test_username',
             email='test@testdomain.com',
-            password='test_password'
+            password='test_password',
         )
         payload = {
             'email': 'test@testdomain.com',
@@ -56,10 +56,7 @@ class TestPublicTokenAPI(TestCase):
         Tests what happens when creating a token, but the User doesn't exist
         """
 
-        payload = {
-            'email': 'test@testdomain.com',
-            'password': 'test_password',
-        }
+        payload = {'email': 'test@testdomain.com', 'password': 'test_password'}
         response = self.client.post(CREATE_TOKEN_URL, payload)
 
         self.assertNotIn('token', response.data)
@@ -68,10 +65,9 @@ class TestPublicTokenAPI(TestCase):
     def test_create_token_missing_field(self):
         """Tests what happens when one of the fields is missing"""
 
-        response = self.client.post(CREATE_TOKEN_URL, {
-            'email': 'something',
-            'password': ''
-        })
+        response = self.client.post(
+            CREATE_TOKEN_URL, {'email': 'something', 'password': ''}
+        )
 
         self.assertNotIn('token', response.data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

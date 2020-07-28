@@ -61,8 +61,7 @@ class AuthTokenSerializer(Serializer):
 
     email = CharField()
     password = CharField(
-        style={'input_type': 'password'},
-        trim_whitespace=False
+        style={'input_type': 'password'}, trim_whitespace=False
     )
 
     def validate(self, attrs: Dict) -> Dict:
@@ -74,7 +73,7 @@ class AuthTokenSerializer(Serializer):
         user = authenticate(
             request=self.context.get('request'),
             username=email,
-            password=password
+            password=password,
         )
         if not user:
             message = _('Unable to authenticate with provided credentials')
