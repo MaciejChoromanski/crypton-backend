@@ -1,7 +1,8 @@
 from typing import Dict, Union
 
 from django.db.models.query import QuerySet
-from rest_framework.authentication import BasicAuthentication
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import (
     CreateAPIView,
@@ -15,9 +16,11 @@ from api.serializers import (
     UserSerializer,
     FriendRequestSerializer,
     FriendSerializer,
+    AuthTokenSerializer,
 )
 
 from core.models import User, FriendRequest, Friend
+from rest_framework.settings import api_settings
 
 
 def friend_request_existence(
@@ -56,7 +59,7 @@ class ManageUserView(RetrieveUpdateDestroyAPIView):
     """Endpoint for retrieving, updating and deleting User's data"""
 
     serializer_class = UserSerializer
-    authentication_classes = (BasicAuthentication,)
+    authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_object(self) -> User:
@@ -69,7 +72,7 @@ class CreateFriendRequestView(CreateAPIView):
     """Endpoint for creating new FriendRequest"""
 
     serializer_class = FriendRequestSerializer
-    authentication_classes = (BasicAuthentication,)
+    authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_serializer(self, *args, **kwargs):
@@ -104,7 +107,7 @@ class ListFriendRequestView(ListAPIView):
     """Endpoint for listing FriendRequest"""
 
     serializer_class = FriendRequestSerializer
-    authentication_classes = (BasicAuthentication,)
+    authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self) -> QuerySet:
@@ -117,7 +120,7 @@ class ManageFriendRequestView(RetrieveUpdateDestroyAPIView):
     """Endpoint for retrieving, updating and deleting FriendRequest's data"""
 
     serializer_class = FriendRequestSerializer
-    authentication_classes = (BasicAuthentication,)
+    authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_object(self) -> FriendRequest:
@@ -135,7 +138,7 @@ class CreateFriendView(CreateAPIView):
     """Endpoint for adding a new Friend"""
 
     serializer_class = FriendSerializer
-    authentication_classes = (BasicAuthentication,)
+    authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def perform_create(self, serializer) -> None:
@@ -160,7 +163,7 @@ class ListFriendView(ListAPIView):
     """Endpoint for listing Friend"""
 
     serializer_class = FriendSerializer
-    authentication_classes = (BasicAuthentication,)
+    authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self) -> QuerySet:
@@ -173,7 +176,7 @@ class ManageFriendView(RetrieveUpdateDestroyAPIView):
     """Endpoint for retrieving, updating and deleting Friend's data"""
 
     serializer_class = FriendSerializer
-    authentication_classes = (BasicAuthentication,)
+    authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     def get_object(self) -> Friend:
@@ -185,3 +188,8 @@ class ManageFriendView(RetrieveUpdateDestroyAPIView):
             raise PermissionDenied({'message': message})
 
         return friend
+
+
+class CreateTokenView(ObtainAuthToken):
+    serializer_class = AuthTokenSerializer
+    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
