@@ -34,4 +34,5 @@ urlpatterns = [
         views.ManageFriendView.as_view(),
         name='friend_manage',
     ),
+    path('token/', views.CreateTokenView.as_view(), name='token'),
 ]

@@ -1,8 +1,14 @@
 from typing import Dict
 
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
+from django.utils.translation import ugettext_lazy as _
 
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import (
+    ModelSerializer,
+    Serializer,
+    CharField,
+    ValidationError,
+)
 
 from core.models import User, FriendRequest, Friend
 
@@ -48,3 +54,32 @@ class FriendSerializer(ModelSerializer):
     class Meta:
         model = Friend
         fields = ('user', 'users_nickname', 'friend_of', 'is_blocked')
+
+
+class AuthTokenSerializer(Serializer):
+    """Serializer for the authentication token"""
+
+    email = CharField()
+    password = CharField(
+        style={'input_type': 'password'},
+        trim_whitespace=False
+    )
+
+    def validate(self, attrs: Dict) -> Dict:
+        """Returns validated attributes"""
+
+        email = attrs.get('email')
+        password = attrs.get('password')
+
+        user = authenticate(
+            request=self.context.get('request'),
+            username=email,
+            password=password
+        )
+        if not user:
+            message = _('Unable to authenticate with provided credentials')
+            raise ValidationError(message, code='authentication')
+
+        attrs['user'] = user
+
+        return attrs
