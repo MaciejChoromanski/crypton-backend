@@ -109,12 +109,10 @@ class TestPrivateFriendAPI(TestCase):
         create_friend_request(**data)
         payload = {'user': self.user_two.pk, 'friend_of': self.user_one.pk}
         response = self.client.post(CREATE_FRIEND_URL, payload)
+        message = b'FriendRequest must be accepted to create a Friend'
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(
-            b'FriendRequest must be accepted to create a Friend',
-            response.content,
-        )
+        self.assertIn(message, response.content)
 
     def test_create_friend_not_sent_friend_request(self) -> None:
         """
@@ -124,11 +122,10 @@ class TestPrivateFriendAPI(TestCase):
 
         payload = {'user': self.user_two.pk, 'friend_of': self.user_one.pk}
         response = self.client.post(CREATE_FRIEND_URL, payload)
+        message = b'Can\'t create a Friend without a FriendRequest'
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(
-            b'Can\'t create a Friend without a FriendRequest', response.content
-        )
+        self.assertIn(message, response.content)
 
     def test_list_friend_successfully(self) -> None:
         """Tests if a Friend is listed successfully"""
@@ -163,12 +160,10 @@ class TestPrivateFriendAPI(TestCase):
         response = self.client.get(
             reverse(MANAGE_FRIEND_URL, kwargs={'pk': friend.pk})
         )
+        message = b'You don\'t have permission to manage this Friend'
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertIn(
-            b'You don\'t have permission to manage this Friend',
-            response.content,
-        )
+        self.assertIn(message, response.content)
 
     def test_retrieve_friend_successfully(self) -> None:
         """Tests if a Friend is retrieved successfully"""
