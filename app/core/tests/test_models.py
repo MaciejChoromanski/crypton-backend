@@ -1,9 +1,11 @@
 from datetime import datetime
 
+from django.db import IntegrityError
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 
-from core.models import FriendRequest, Friend
+from core.models import FriendRequest, Friend, Message
 
 
 class TestUser(TestCase):
@@ -57,28 +59,60 @@ class TestUser(TestCase):
 class TestFriendRequest(TestCase):
     """Tests for the FriendRequest model"""
 
-    def test_create_friend_request_successful(self) -> None:
-        """Tests if FriendRequest is created successfully"""
+    def setUp(self) -> None:
+        """Creates Users for tests purposes"""
 
-        user_one = get_user_model().objects.create_user(
+        self.user_one = get_user_model().objects.create_user(
             username='user_one',
             email='user_one@testdomain.com',
             password='password_one',
         )
-        user_two = get_user_model().objects.create_user(
+        self.user_two = get_user_model().objects.create_user(
             username='user_two',
             email='user_two@testdomain.com',
             password='password_two',
         )
+
+    def test_create_friend_request_successful(self) -> None:
+        """Tests if FriendRequest is created successfully"""
+
         friends_request = FriendRequest.objects.create(
-            to_user=user_one, from_user=user_two
+            to_user=self.user_one, from_user=self.user_two
         )
 
-        self.assertEqual(friends_request.to_user, user_one)
-        self.assertEqual(friends_request.from_user, user_two)
+        self.assertEqual(friends_request.to_user, self.user_one)
+        self.assertEqual(friends_request.from_user, self.user_two)
         self.assertTrue(friends_request.is_new)
         self.assertFalse(friends_request.is_accepted)
         self.assertIsInstance(friends_request.created_on, datetime)
+
+    def test_friend_request_unique_constraint(self) -> None:
+        """
+        Tests if FriendRequest isn't created when
+        there's already one with the same Users
+        """
+
+        FriendRequest.objects.create(
+            to_user=self.user_one, from_user=self.user_two
+        )
+        with self.assertRaises(IntegrityError):
+            FriendRequest.objects.create(
+                to_user=self.user_one, from_user=self.user_two
+            )
+
+    def test_friend_request_custom_validation(self) -> None:
+        """
+        Tests if FriendRequest isn't created when there's already
+        one with the same Users but in different fields
+        """
+
+        FriendRequest.objects.create(
+            to_user=self.user_one, from_user=self.user_two
+        )
+        with self.assertRaises(ValidationError):
+            FriendRequest.objects.create(
+                to_user=self.user_two, from_user=self.user_one
+            )
 
 
 class TestFriend(TestCase):
@@ -104,3 +138,30 @@ class TestFriend(TestCase):
         self.assertEqual(friend.friend_of, user_one)
         self.assertIsInstance(friend.start_date, datetime)
         self.assertFalse(friend.is_blocked)
+
+
+class TestMessage(TestCase):
+    """Tests for the Message model"""
+
+    def test_create_message_successful(self) -> None:
+        """Tests if Message is created successfully"""
+
+        user_one = get_user_model().objects.create_user(
+            username='user_one',
+            email='user_one@testdomain.com',
+            password='password_one',
+        )
+        user_two = get_user_model().objects.create_user(
+            username='user_two',
+            email='user_two@testdomain.com',
+            password='password_two',
+        )
+        message = Message.objects.create(
+            content='text', to_user=user_two, from_user=user_one
+        )
+
+        self.assertEqual(message.content, 'text')
+        self.assertEqual(message.to_user, user_two)
+        self.assertEqual(message.from_user, user_one)
+        self.assertTrue(message.is_new)
+        self.assertIsInstance(message.sent_on, datetime)
