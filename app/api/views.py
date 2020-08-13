@@ -178,3 +178,9 @@ class ManageFriendView(RetrieveUpdateDestroyAPIView):
 class CreateTokenView(ObtainAuthToken):
     serializer_class = serializers.AuthTokenSerializer
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
+
+
+class CreateMessageView(CreateAPIView):
+    """Endpoint for creating a Message"""
+
+    serializer_class = serializers.MessageSerializer

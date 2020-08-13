@@ -35,4 +35,9 @@ urlpatterns = [
         name='friend_manage',
     ),
     path('token/', views.CreateTokenView.as_view(), name='token'),
+    path(
+        'message/create/',
+        views.CreateMessageView.as_view(),
+        name='message_create',
+    ),
 ]

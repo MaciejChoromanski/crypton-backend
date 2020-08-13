@@ -143,25 +143,38 @@ class TestFriend(TestCase):
 class TestMessage(TestCase):
     """Tests for the Message model"""
 
-    def test_create_message_successful(self) -> None:
-        """Tests if Message is created successfully"""
+    def setUp(self) -> None:
+        """Creates Users for the test purposes"""
 
-        user_one = get_user_model().objects.create_user(
+        self.user_one = get_user_model().objects.create_user(
             username='user_one',
             email='user_one@testdomain.com',
             password='password_one',
         )
-        user_two = get_user_model().objects.create_user(
+        self.user_two = get_user_model().objects.create_user(
             username='user_two',
             email='user_two@testdomain.com',
             password='password_two',
         )
+
+    def test_create_message_successful(self) -> None:
+        """Tests if Message is created successfully"""
+
+        Friend.objects.create(user=self.user_two, friend_of=self.user_one)
         message = Message.objects.create(
-            content='text', to_user=user_two, from_user=user_one
+            content='text', to_user=self.user_two, from_user=self.user_one
         )
 
         self.assertEqual(message.content, 'text')
-        self.assertEqual(message.to_user, user_two)
-        self.assertEqual(message.from_user, user_one)
+        self.assertEqual(message.to_user, self.user_two)
+        self.assertEqual(message.from_user, self.user_one)
         self.assertTrue(message.is_new)
         self.assertIsInstance(message.sent_on, datetime)
+
+    def test_create_message_users_are_not_friends(self) -> None:
+        """Tests if Message is created successfully"""
+
+        with self.assertRaises(ValidationError):
+            Message.objects.create(
+                content='text', to_user=self.user_two, from_user=self.user_one
+            )

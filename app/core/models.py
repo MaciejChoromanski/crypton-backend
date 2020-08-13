@@ -152,6 +152,32 @@ class Friend(models.Model):
         return f'<Friend: {self.user}, friend of {self.friend_of}>'
 
 
+class MessageManager(models.Manager):
+    """Manager for the Message model"""
+
+    def create(self, *args, **kwargs) -> None:
+
+        self._validate_friendship(**kwargs)
+        return super().create(*args, **kwargs)
+
+    @staticmethod
+    def _validate_friendship(**kwargs) -> None:
+        """Validates if Users are friends"""
+
+        users_are_friends = (
+            Friend.objects.filter(
+                user=kwargs['to_user'], friend_of=kwargs['from_user']
+            ).exists()
+            or
+            Friend.objects.filter(
+                user=kwargs['from_user'], friend_of=kwargs['to_user']
+            ).exists()
+        )
+        if not users_are_friends:
+            message = 'Message can\'t be created because Users aren\'t friends'
+            raise ValidationError(message)
+
+
 class Message(models.Model):
     """A model for messages, which Users sent to each other"""
 
@@ -164,6 +190,8 @@ class Message(models.Model):
     )
     is_new = models.BooleanField(default=True)
     sent_on = models.DateField(default=now, editable=False)
+
+    objects = MessageManager()
 
     def __repr__(self) -> str:
         """Representation of a Message object"""
