@@ -10,7 +10,7 @@ from rest_framework.serializers import (
     ValidationError,
 )
 
-from core.models import User, FriendRequest, Friend
+from core.models import User, FriendRequest, Friend, Message
 
 
 class UserSerializer(ModelSerializer):
@@ -80,3 +80,11 @@ class AuthTokenSerializer(Serializer):
         attrs['user'] = user
 
         return attrs
+
+
+class MessageSerializer(ModelSerializer):
+    """Serializer for the Message model"""
+
+    class Meta:
+        model = Message
+        fields = ('content', 'to_user', 'from_user', 'is_new', 'sent_on')

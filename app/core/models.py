@@ -7,6 +7,7 @@ from django.contrib.auth.models import (
     AbstractBaseUser,
     PermissionsMixin,
 )
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.utils.timezone import now
@@ -89,21 +90,42 @@ class User(AbstractBaseUser, PermissionsMixin):
         return f'<User: {self.username}>'
 
 
+class FriendRequestManager(models.Manager):
+    """Manager for the Friend model"""
+
+    def create(self, *args, **kwargs):
+        """Creates FriendRequest if similar FriendRequest doesn't exist"""
+
+        similar_friend_request_exists = self.filter(
+            to_user=kwargs['from_user'], from_user=kwargs['to_user']
+        ).exists()
+        if similar_friend_request_exists:
+            raise ValidationError('Similar FriendRequest already exists')
+
+        return super().create(*args, **kwargs)
+
+
 class FriendRequest(models.Model):
     """A model for friend's requests from one User to another"""
 
     to_user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='to_user'
+        User, on_delete=models.CASCADE, related_name='to_user_friend_request'
     )
     from_user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='from_user'
+        User, on_delete=models.CASCADE, related_name='from_user_friend_request'
     )
     is_new = models.BooleanField(default=True)
     is_accepted = models.BooleanField(default=False)
     created_on = models.DateField(default=now, editable=False)
 
+    objects = FriendRequestManager()
+
     class Meta:
-        unique_together = ['to_user', 'from_user']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['to_user', 'from_user'], name='uq_users'
+            )
+        ]
 
     def __repr__(self) -> str:
         """Representation of a FriendRequest object"""
@@ -124,7 +146,53 @@ class Friend(models.Model):
     start_date = models.DateField(default=now, editable=False)
     is_blocked = models.BooleanField(default=False)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Representation of a Friend object"""
 
         return f'<Friend: {self.user}, friend of {self.friend_of}>'
+
+
+class MessageManager(models.Manager):
+    """Manager for the Message model"""
+
+    def create(self, *args, **kwargs) -> None:
+
+        self._validate_friendship(**kwargs)
+        return super().create(*args, **kwargs)
+
+    @staticmethod
+    def _validate_friendship(**kwargs) -> None:
+        """Validates if Users are friends"""
+
+        users_are_friends = (
+            Friend.objects.filter(
+                user=kwargs['to_user'], friend_of=kwargs['from_user']
+            ).exists()
+            or Friend.objects.filter(
+                user=kwargs['from_user'], friend_of=kwargs['to_user']
+            ).exists()
+        )
+        if not users_are_friends:
+            message = 'Message can\'t be created because Users aren\'t friends'
+            raise ValidationError(message)
+
+
+class Message(models.Model):
+    """A model for messages, which Users sent to each other"""
+
+    content = models.TextField()
+    to_user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='to_user_message'
+    )
+    from_user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='from_user_message'
+    )
+    is_new = models.BooleanField(default=True)
+    sent_on = models.DateTimeField(default=now, editable=False)
+
+    objects = MessageManager()
+
+    def __repr__(self) -> str:
+        """Representation of a Message object"""
+
+        return f'<Message: to {self.to_user} from {self.from_user}>'
