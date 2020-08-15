@@ -8,7 +8,6 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
     ListAPIView,
     get_object_or_404,
-    ListCreateAPIView,
 )
 from rest_framework.permissions import AllowAny
 
@@ -154,7 +153,7 @@ class ListFriendView(ListAPIView):
     serializer_class = serializers.FriendSerializer
 
     def get_queryset(self) -> QuerySet:
-        """Returns a QueryFriends of User's friends"""
+        """Returns a QuerySet of User's friends"""
 
         return Friend.objects.filter(friend_of=self.request.user)
 
@@ -165,7 +164,7 @@ class ManageFriendView(RetrieveUpdateDestroyAPIView):
     serializer_class = serializers.FriendSerializer
 
     def get_object(self) -> Friend:
-        """Returns a FriendRequest if it was meant for the logged in User"""
+        """Returns a Friend if it is a friend of the User"""
 
         friend = get_object_or_404(Friend, pk=self.kwargs['pk'])
 
@@ -177,6 +176,8 @@ class ManageFriendView(RetrieveUpdateDestroyAPIView):
 
 
 class CreateTokenView(ObtainAuthToken):
+    """Endpoint for creating a Token"""
+
     serializer_class = serializers.AuthTokenSerializer
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
 
@@ -212,3 +213,20 @@ class ListMessageView(ListAPIView):
         messages = messages_from_friend | messages_to_user
 
         return messages.order_by('-sent_on')
+
+
+class ManageMessageView(RetrieveUpdateDestroyAPIView):
+    """Endpoint for retrieving, updating and deleting Message's data"""
+
+    serializer_class = serializers.MessageSerializer
+
+    def get_object(self) -> Message:
+        """Returns a Message if it can be read by the User"""
+
+        message = get_object_or_404(Message, pk=self.kwargs['pk'])
+
+        if self.request.user not in [message.to_user, message.from_user]:
+            message = 'You don\'t have permission to manage this Message'
+            raise PermissionDenied({'message': message})
+
+        return message
