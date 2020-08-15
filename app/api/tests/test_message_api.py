@@ -4,11 +4,16 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework import status
 
-from .utils import create_user
+from .utils import (
+    create_user,
+    create_friend,
+    create_message,
+)
 
-from core.models import Message, Friend
+from core.models import Message, Friend, User
 
 CREATE_MESSAGE_URL = reverse('api:message_create')
+LIST_MESSAGE_URL = reverse('api:message_list')
 
 
 class TestPublicMessageAPI(TestCase):
@@ -43,6 +48,15 @@ class TestPublicMessageAPI(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def test_list_message_unauthorized(self) -> None:
+        """
+        Tests what happens if a Message is listed by an anonymous User
+        """
+
+        response = self.client.get(CREATE_MESSAGE_URL)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
 
 class TestPrivateMessageAPI(TestCase):
     """Tests for the private API for the Message model"""
@@ -66,7 +80,7 @@ class TestPrivateMessageAPI(TestCase):
     def test_create_message_successfully(self) -> None:
         """Tests if Message is created successfully"""
 
-        Friend.objects.create(user=self.user_two, friend_of=self.user_one)
+        create_friend(user=self.user_two, friend_of=self.user_one)
         payload = {
             'content': 'text',
             'to_user': self.user_one.pk,
@@ -87,3 +101,77 @@ class TestPrivateMessageAPI(TestCase):
         response = self.client.post(CREATE_MESSAGE_URL, payload)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_list_message_successful(self) -> None:
+        """Tests if Message is listed successfully"""
+
+        create_friend(user=self.user_two, friend_of=self.user_one)
+        first_message = create_message(
+            content='first message',
+            to_user=self.user_two,
+            from_user=self.user_one,
+        )
+        second_message = create_message(
+            content='second message',
+            to_user=self.user_one,
+            from_user=self.user_two,
+        )
+        data = {'friend_pk': self.user_two.pk}
+        response = self.client.get(LIST_MESSAGE_URL, data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]['content'], second_message.content)
+        self.assertEqual(response.data[1]['content'], first_message.content)
+
+    def test_list_message_no_friend_pk_provided(self) -> None:
+        """
+        Tests what happens when no friend_pk is
+        provided when calling the list view
+        """
+
+        create_friend(user=self.user_two, friend_of=self.user_one)
+        create_message(
+            content='message',
+            to_user=self.user_two,
+            from_user=self.user_one,
+        )
+        response = self.client.get(LIST_MESSAGE_URL)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_list_message_friend_does_not_exist(self) -> None:
+        """
+        Tests what happens if User's friend doesn't exist
+        """
+
+        create_friend(user=self.user_two, friend_of=self.user_one)
+        create_message(
+            content='message',
+            to_user=self.user_two,
+            from_user=self.user_one,
+        )
+        User.objects.filter(pk=self.user_two.pk).delete()
+        data = {'friend_pk': self.user_two.pk}
+        response = self.client.get(LIST_MESSAGE_URL, data)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_list_message_users_are_not_friends(self) -> None:
+        """
+        Tests what happens if users aren't friends and the list view is called
+        """
+
+        create_friend(user=self.user_two, friend_of=self.user_one)
+        create_message(
+            content='message',
+            to_user=self.user_two,
+            from_user=self.user_one,
+        )
+        Friend.objects.filter(
+            user=self.user_two, friend_of=self.user_one
+        ).delete()
+        data = {'friend_pk': self.user_two.pk}
+        response = self.client.get(LIST_MESSAGE_URL, data)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

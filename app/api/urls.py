@@ -40,4 +40,9 @@ urlpatterns = [
         views.CreateMessageView.as_view(),
         name='message_create',
     ),
+    path(
+        'message/list/',
+        views.ListMessageView.as_view(),
+        name='message_list',
+    ),
 ]
