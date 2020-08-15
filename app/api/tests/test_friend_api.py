@@ -88,12 +88,9 @@ class TestPrivateFriendAPI(TestCase):
     def test_create_friend_successfully(self) -> None:
         """Tests if a Friend is created successfully"""
 
-        data = {
-            'to_user': self.user_one,
-            'from_user': self.user_two,
-            'is_accepted': True,
-        }
-        create_friend_request(**data)
+        create_friend_request(
+            from_user=self.user_two, to_user=self.user_one, is_accepted=True
+        )
         payload = {'user': self.user_two.pk, 'friend_of': self.user_one.pk}
         response = self.client.post(CREATE_FRIEND_URL, payload)
 
@@ -122,7 +119,7 @@ class TestPrivateFriendAPI(TestCase):
 
         payload = {'user': self.user_two.pk, 'friend_of': self.user_one.pk}
         response = self.client.post(CREATE_FRIEND_URL, payload)
-        message = b'Can\'t create a Friend without a FriendRequest'
+        message = b'FriendRequest must exist to create a Friend'
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(message, response.content)
@@ -130,8 +127,10 @@ class TestPrivateFriendAPI(TestCase):
     def test_list_friend_successfully(self) -> None:
         """Tests if a Friend is listed successfully"""
 
-        data = {'user': self.user_two, 'friend_of': self.user_one}
-        create_friend(**data)
+        create_friend_request(
+            from_user=self.user_two, to_user=self.user_one, is_accepted=True
+        )
+        create_friend(user=self.user_two, friend_of=self.user_one)
         response = self.client.get(LIST_FRIEND_URL)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -152,11 +151,14 @@ class TestPrivateFriendAPI(TestCase):
     def test_manage_friend_forbidden(self) -> None:
         """
         Tests what happens when User tries to
-        access FriendRequest, which was't meant for them
+        access FriendRequest, which wasn't meant for them
         """
 
-        data = {'user': self.user_one, 'friend_of': self.user_two}
-        friend = create_friend(**data)
+        self.client.force_authenticate(self.user_two)
+        create_friend_request(
+            from_user=self.user_two, to_user=self.user_one, is_accepted=True
+        )
+        friend = create_friend(user=self.user_two, friend_of=self.user_one)
         response = self.client.get(
             reverse(MANAGE_FRIEND_URL, kwargs={'pk': friend.pk})
         )
@@ -168,8 +170,10 @@ class TestPrivateFriendAPI(TestCase):
     def test_retrieve_friend_successfully(self) -> None:
         """Tests if a Friend is retrieved successfully"""
 
-        data = {'user': self.user_two, 'friend_of': self.user_one}
-        friend = create_friend(**data)
+        create_friend_request(
+            from_user=self.user_two, to_user=self.user_one, is_accepted=True
+        )
+        friend = create_friend(user=self.user_two, friend_of=self.user_one)
         response = self.client.get(
             reverse(MANAGE_FRIEND_URL, kwargs={'pk': friend.pk})
         )
@@ -186,8 +190,10 @@ class TestPrivateFriendAPI(TestCase):
     def test_update_friend_successfully(self) -> None:
         """Tests if a Friend is updated successfully"""
 
-        data = {'user': self.user_two, 'friend_of': self.user_one}
-        friend = create_friend(**data)
+        create_friend_request(
+            from_user=self.user_two, to_user=self.user_one, is_accepted=True
+        )
+        friend = create_friend(user=self.user_two, friend_of=self.user_one)
         payload = {'users_nickname': 'nickname', 'is_blocked': True}
         response = self.client.patch(
             reverse(MANAGE_FRIEND_URL, kwargs={'pk': friend.pk}), payload
@@ -201,8 +207,10 @@ class TestPrivateFriendAPI(TestCase):
     def test_delete_friend_successfully(self) -> None:
         """Tests if a Friend is deleted successfully"""
 
-        data = {'user': self.user_two, 'friend_of': self.user_one}
-        friend = create_friend(**data)
+        create_friend_request(
+            from_user=self.user_two, to_user=self.user_one, is_accepted=True
+        )
+        friend = create_friend(user=self.user_two, friend_of=self.user_one)
         response = self.client.delete(
             reverse(MANAGE_FRIEND_URL, kwargs={'pk': friend.pk})
         )

@@ -19,7 +19,7 @@ urlpatterns = [
         name='friend_request_list',
     ),
     path(
-        'friend_request/manage/<int:pk>/',
+        'friend_request/<int:pk>/manage/',
         views.ManageFriendRequestView.as_view(),
         name='friend_request_manage',
     ),
@@ -30,7 +30,7 @@ urlpatterns = [
     ),
     path('friend/list/', views.ListFriendView.as_view(), name='friend_list'),
     path(
-        'friend/manage/<int:pk>/',
+        'friend/<int:pk>/manage/',
         views.ManageFriendView.as_view(),
         name='friend_manage',
     ),

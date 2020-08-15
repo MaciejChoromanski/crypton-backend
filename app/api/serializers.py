@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Any
 
 from django.contrib.auth import get_user_model, authenticate
 from django.utils.translation import ugettext_lazy as _
@@ -22,16 +22,17 @@ class UserSerializer(ModelSerializer):
         read_only_fields = ('is_active', 'is_staff')
         extra_kwargs = {'password': {'write_only': True, 'min_length': 5}}
 
-    def create(self, validated_data: Dict) -> User:
+    def create(self, validated_data: Dict[str, Any]) -> User:
         """Creates a new User"""
 
         return get_user_model().objects.create_user(**validated_data)
 
-    def update(self, instance: User, validated_data: Dict) -> User:
+    def update(self, instance: User, validated_data: Dict[str, Any]) -> User:
         """Updates User's data"""
 
         password = validated_data.pop('password', None)
         user = super().update(instance, validated_data)
+
         if password:
             user.set_password(password)
             user.save()
@@ -63,7 +64,7 @@ class AuthTokenSerializer(Serializer):
         style={'input_type': 'password'}, trim_whitespace=False
     )
 
-    def validate(self, attrs: Dict) -> Dict:
+    def validate(self, attrs: Dict[str, Any]) -> Dict[str, Any]:
         """Returns validated attributes"""
 
         email = attrs.get('email')

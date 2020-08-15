@@ -5,7 +5,12 @@ from freezegun import freeze_time
 from rest_framework.test import APIClient
 from rest_framework import status
 
-from .utils import create_user, create_friend, create_message
+from .utils import (
+    create_user,
+    create_friend_request,
+    create_friend,
+    create_message,
+)
 
 from core.models import Message, Friend, User
 
@@ -89,6 +94,9 @@ class TestPrivateMessageAPI(TestCase):
     def test_create_message_successfully(self) -> None:
         """Tests if Message is created successfully"""
 
+        create_friend_request(
+            from_user=self.user_two, to_user=self.user_one, is_accepted=True
+        )
         create_friend(user=self.user_two, friend_of=self.user_one)
         payload = {
             'content': 'text',
@@ -114,6 +122,9 @@ class TestPrivateMessageAPI(TestCase):
     def test_list_message_successful(self) -> None:
         """Tests if Message is listed successfully"""
 
+        create_friend_request(
+            from_user=self.user_two, to_user=self.user_one, is_accepted=True
+        )
         create_friend(user=self.user_two, friend_of=self.user_one)
         first_message = create_message(
             content='first message',
@@ -139,6 +150,9 @@ class TestPrivateMessageAPI(TestCase):
         provided when calling the list view
         """
 
+        create_friend_request(
+            from_user=self.user_two, to_user=self.user_one, is_accepted=True
+        )
         create_friend(user=self.user_two, friend_of=self.user_one)
         create_message(
             content='message', to_user=self.user_two, from_user=self.user_one
@@ -152,6 +166,9 @@ class TestPrivateMessageAPI(TestCase):
         Tests what happens if User's friend doesn't exist
         """
 
+        create_friend_request(
+            from_user=self.user_two, to_user=self.user_one, is_accepted=True
+        )
         create_friend(user=self.user_two, friend_of=self.user_one)
         create_message(
             content='message', to_user=self.user_two, from_user=self.user_one
@@ -167,6 +184,9 @@ class TestPrivateMessageAPI(TestCase):
         Tests what happens if users aren't friends and the list view is called
         """
 
+        create_friend_request(
+            from_user=self.user_two, to_user=self.user_one, is_accepted=True
+        )
         create_friend(user=self.user_two, friend_of=self.user_one)
         create_message(
             content='message', to_user=self.user_two, from_user=self.user_one
@@ -202,6 +222,9 @@ class TestPrivateMessageAPI(TestCase):
             password='test_password_three',
             username='test_username_three',
         )
+        create_friend_request(
+            from_user=self.user_two, to_user=user_three, is_accepted=True
+        )
         create_friend(user=self.user_two, friend_of=user_three)
         message = create_message(
             content='message', to_user=self.user_two, from_user=user_three
@@ -220,6 +243,9 @@ class TestPrivateMessageAPI(TestCase):
         Tests what happens if a Message is retrieved successfully
         """
 
+        create_friend_request(
+            from_user=self.user_two, to_user=self.user_one, is_accepted=True
+        )
         create_friend(user=self.user_two, friend_of=self.user_one)
         message = create_message(
             content='message', to_user=self.user_two, from_user=self.user_one
@@ -241,6 +267,9 @@ class TestPrivateMessageAPI(TestCase):
     def test_update_message_successful(self) -> None:
         """Tests if a Message is updated successfully"""
 
+        create_friend_request(
+            from_user=self.user_two, to_user=self.user_one, is_accepted=True
+        )
         create_friend(user=self.user_two, friend_of=self.user_one)
         message = create_message(
             content='message', to_user=self.user_two, from_user=self.user_one
@@ -258,6 +287,9 @@ class TestPrivateMessageAPI(TestCase):
     def test_delete_message_successful(self) -> None:
         """Tests if a Message is deleted successfully"""
 
+        create_friend_request(
+            from_user=self.user_two, to_user=self.user_one, is_accepted=True
+        )
         create_friend(user=self.user_two, friend_of=self.user_one)
         message = create_message(
             content='message', to_user=self.user_two, from_user=self.user_one

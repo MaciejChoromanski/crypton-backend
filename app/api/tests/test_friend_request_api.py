@@ -108,10 +108,8 @@ class TestFriendRequestPrivateAPI(TestCase):
             'from_user': self.user_one.pk,
         }
         response = self.client.post(CREATE_FRIEND_REQUEST_URL, payload)
-        message = b'You have already sent a FriendRequest to this User'
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(message, response.content)
 
     def test_create_friend_request_already_exists_sent_to_user(self) -> None:
         """
@@ -125,10 +123,8 @@ class TestFriendRequestPrivateAPI(TestCase):
             'from_user': self.user_two.pk,
         }
         response = self.client.post(CREATE_FRIEND_REQUEST_URL, payload)
-        message = b'This User has already sent you a FriendRequest'
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(message, response.content)
 
     def test_create_friend_request_no_crypto_key_provided(self) -> None:
         """
@@ -166,7 +162,7 @@ class TestFriendRequestPrivateAPI(TestCase):
     def test_manage_friend_request_forbidden(self) -> None:
         """
         Tests what happens when User tries to
-        access FriendRequest, which was't meant for them
+        access FriendRequest, which wasn't meant for them
         """
 
         data = {'to_user': self.user_two, 'from_user': self.user_one}
