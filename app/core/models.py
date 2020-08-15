@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import random
-from typing import Any, Dict, Union
+from typing import Any, Union
 
 from django.contrib.auth.models import (
     BaseUserManager,
@@ -177,8 +177,7 @@ class FriendManager(models.Manager):
             Friend.objects.filter(
                 user=first_user, friend_of=second_user
             ).exists()
-            or
-            Friend.objects.filter(
+            or Friend.objects.filter(
                 user=second_user, friend_of=first_user
             ).exists()
         )

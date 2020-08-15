@@ -54,7 +54,7 @@ class CreateFriendRequestView(CreateAPIView):
         return serializer_class(*args, **kwargs)
 
     def perform_create(
-            self, serializer: serializers.FriendRequestSerializer
+        self, serializer: serializers.FriendRequestSerializer
     ) -> None:
         """Saves FriendRequest if serializer doesn't raise errors"""
 

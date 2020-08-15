@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.contrib.auth import get_user_model
@@ -170,9 +169,7 @@ class TestFriend(TestCase):
         """Tests if Friend is not created when FriendRequest wasn't sent"""
 
         with self.assertRaises(ValidationError):
-            Friend.objects.create(
-                user=self.user_two, friend_of=self.user_one
-            )
+            Friend.objects.create(user=self.user_two, friend_of=self.user_one)
 
     def test_create_friend_not_accepted_friend_request(self) -> None:
         """Tests if Friend is not created when FriendRequest wasn't accepted"""
@@ -182,9 +179,7 @@ class TestFriend(TestCase):
         )
 
         with self.assertRaises(ValidationError):
-            Friend.objects.create(
-                user=self.user_two, friend_of=self.user_one
-            )
+            Friend.objects.create(user=self.user_two, friend_of=self.user_one)
 
     def test_are_friends_returns_true(self) -> None:
         """Tests if are_friends returns True if two Users are friends"""
@@ -192,9 +187,7 @@ class TestFriend(TestCase):
         FriendRequest.objects.create(
             from_user=self.user_two, to_user=self.user_one, is_accepted=True
         )
-        Friend.objects.create(
-            user=self.user_two, friend_of=self.user_one
-        )
+        Friend.objects.create(user=self.user_two, friend_of=self.user_one)
         result = Friend.objects.are_friends(self.user_one, self.user_two)
 
         self.assertTrue(result)
