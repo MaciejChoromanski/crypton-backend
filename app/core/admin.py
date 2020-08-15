@@ -29,3 +29,6 @@ class UserAdmin(BaseUserAdmin):
 
 
 admin.site.register(models.User, UserAdmin)
+admin.site.register(models.FriendRequest)
+admin.site.register(models.Friend)
+admin.site.register(models.Message)
