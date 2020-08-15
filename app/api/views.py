@@ -1,6 +1,7 @@
-from typing import Dict, Union
+from typing import Dict, Any
 
 from django.db.models.query import QuerySet
+from django.core.exceptions import ValidationError as ModelValidationError
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import (
@@ -15,32 +16,6 @@ from api import serializers
 
 from core.models import User, FriendRequest, Friend, Message
 from rest_framework.settings import api_settings
-
-
-def friend_request_info(
-    first_user_pk: Union[int, str], second_user_pk: Union[int, str]
-) -> Dict:
-    """Returns info about the FriendRequest"""
-
-    friend_request_sent_by_user = FriendRequest.objects.filter(
-        to_user=second_user_pk, from_user=first_user_pk
-    )
-    friend_request_sent_to_user = FriendRequest.objects.filter(
-        to_user=first_user_pk, from_user=second_user_pk
-    )
-
-    if friend_request_sent_by_user:
-        friend_request = friend_request_sent_by_user[0]
-    elif friend_request_sent_to_user:
-        friend_request = friend_request_sent_to_user[0]
-    else:
-        friend_request = None
-
-    return {
-        'sent_by': friend_request_sent_by_user.exists(),
-        'sent_to': friend_request_sent_to_user.exists(),
-        'instance': friend_request,
-    }
 
 
 class CreateUserView(CreateAPIView):
@@ -73,7 +48,24 @@ class CreateFriendRequestView(CreateAPIView):
         """
 
         serializer_class = self.get_serializer_class()
-        kwargs["context"] = self.get_serializer_context()
+        kwargs['context'] = self.get_serializer_context()
+        kwargs['data'] = self._get_updated_request_data_or_raise_error()
+
+        return serializer_class(*args, **kwargs)
+
+    def perform_create(
+            self, serializer: serializers.FriendRequestSerializer
+    ) -> None:
+        """Saves FriendRequest if serializer doesn't raise errors"""
+
+        try:
+            serializer.save()
+        except ModelValidationError as error:
+            raise ValidationError(error.message)
+
+    def _get_updated_request_data_or_raise_error(self) -> Dict[str, Any]:
+        """Updates request based on provided data"""
+
         data = self.request.data.copy()
         crypto_key = data.get('crypto_key')
 
@@ -82,18 +74,8 @@ class CreateFriendRequestView(CreateAPIView):
 
         user = get_object_or_404(User, crypto_key=crypto_key)
         data['to_user'] = user.pk
-        friend_request = friend_request_info(data['from_user'], user.pk)
 
-        if friend_request['sent_by']:
-            detail = 'You have already sent a FriendRequest to this User'
-            raise ValidationError(detail=detail)
-        elif friend_request['sent_to']:
-            detail = 'This User has already sent you a FriendRequest'
-            raise ValidationError(detail=detail)
-
-        kwargs['data'] = data
-
-        return serializer_class(*args, **kwargs)
+        return data
 
 
 class ListFriendRequestView(ListAPIView):
@@ -129,22 +111,13 @@ class CreateFriendView(CreateAPIView):
 
     serializer_class = serializers.FriendSerializer
 
-    def perform_create(self, serializer) -> None:
-        """Creates a new Friend if a FriendRequest exists and is accepted"""
+    def perform_create(self, serializer: serializers.FriendSerializer) -> None:
+        """Saves Friend if serializer doesn't raise errors"""
 
-        data = self.request.data
-        friend_request = friend_request_info(
-            data['friend_of'], data['user']
-        ).get('instance')
-
-        if not friend_request:
-            detail = 'Can\'t create a Friend without a FriendRequest'
-            raise ValidationError(detail=detail)
-        elif friend_request and not friend_request.is_accepted:
-            detail = 'FriendRequest must be accepted to create a Friend'
-            raise ValidationError(detail=detail)
-
-        serializer.save()
+        try:
+            serializer.save()
+        except ModelValidationError as error:
+            raise ValidationError(error.message)
 
 
 class ListFriendView(ListAPIView):
