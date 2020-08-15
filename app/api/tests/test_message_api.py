@@ -5,11 +5,7 @@ from freezegun import freeze_time
 from rest_framework.test import APIClient
 from rest_framework import status
 
-from .utils import (
-    create_user,
-    create_friend,
-    create_message,
-)
+from .utils import create_user, create_friend, create_message
 
 from core.models import Message, Friend, User
 
@@ -145,9 +141,7 @@ class TestPrivateMessageAPI(TestCase):
 
         create_friend(user=self.user_two, friend_of=self.user_one)
         create_message(
-            content='message',
-            to_user=self.user_two,
-            from_user=self.user_one,
+            content='message', to_user=self.user_two, from_user=self.user_one
         )
         response = self.client.get(LIST_MESSAGE_URL)
 
@@ -160,9 +154,7 @@ class TestPrivateMessageAPI(TestCase):
 
         create_friend(user=self.user_two, friend_of=self.user_one)
         create_message(
-            content='message',
-            to_user=self.user_two,
-            from_user=self.user_one,
+            content='message', to_user=self.user_two, from_user=self.user_one
         )
         User.objects.filter(pk=self.user_two.pk).delete()
         data = {'friend_pk': self.user_two.pk}
@@ -177,9 +169,7 @@ class TestPrivateMessageAPI(TestCase):
 
         create_friend(user=self.user_two, friend_of=self.user_one)
         create_message(
-            content='message',
-            to_user=self.user_two,
-            from_user=self.user_one,
+            content='message', to_user=self.user_two, from_user=self.user_one
         )
         Friend.objects.filter(
             user=self.user_two, friend_of=self.user_one
@@ -214,9 +204,7 @@ class TestPrivateMessageAPI(TestCase):
         )
         create_friend(user=self.user_two, friend_of=user_three)
         message = create_message(
-            content='message',
-            to_user=self.user_two,
-            from_user=user_three,
+            content='message', to_user=self.user_two, from_user=user_three
         )
         response = self.client.get(
             reverse(MANAGE_MESSAGE_URL, kwargs={'pk': message.pk})
@@ -234,9 +222,7 @@ class TestPrivateMessageAPI(TestCase):
 
         create_friend(user=self.user_two, friend_of=self.user_one)
         message = create_message(
-            content='message',
-            to_user=self.user_two,
-            from_user=self.user_one,
+            content='message', to_user=self.user_two, from_user=self.user_one
         )
         response = self.client.get(
             reverse(MANAGE_MESSAGE_URL, kwargs={'pk': message.pk})
@@ -246,7 +232,7 @@ class TestPrivateMessageAPI(TestCase):
             'to_user': self.user_two.pk,
             'from_user': self.user_one.pk,
             'is_new': True,
-            'sent_on': '2020-09-25T17:17:17Z'
+            'sent_on': '2020-09-25T17:17:17Z',
         }
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -257,14 +243,9 @@ class TestPrivateMessageAPI(TestCase):
 
         create_friend(user=self.user_two, friend_of=self.user_one)
         message = create_message(
-            content='message',
-            to_user=self.user_two,
-            from_user=self.user_one,
+            content='message', to_user=self.user_two, from_user=self.user_one
         )
-        payload = {
-            'content': 'new message',
-            'is_new': False,
-        }
+        payload = {'content': 'new message', 'is_new': False}
         response = self.client.patch(
             reverse(MANAGE_MESSAGE_URL, kwargs={'pk': message.pk}), payload
         )
@@ -279,9 +260,7 @@ class TestPrivateMessageAPI(TestCase):
 
         create_friend(user=self.user_two, friend_of=self.user_one)
         message = create_message(
-            content='message',
-            to_user=self.user_two,
-            from_user=self.user_one,
+            content='message', to_user=self.user_two, from_user=self.user_one
         )
         response = self.client.delete(
             reverse(MANAGE_MESSAGE_URL, kwargs={'pk': message.pk})

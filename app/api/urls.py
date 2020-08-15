@@ -41,9 +41,7 @@ urlpatterns = [
         name='message_create',
     ),
     path(
-        'message/list/',
-        views.ListMessageView.as_view(),
-        name='message_list',
+        'message/list/', views.ListMessageView.as_view(), name='message_list'
     ),
     path(
         'message/<int:pk>/manage',

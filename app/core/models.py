@@ -124,7 +124,7 @@ class FriendRequest(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['to_user', 'from_user'], name='uq_users'
-            ),
+            )
         ]
 
     def __repr__(self) -> str:
@@ -168,8 +168,7 @@ class MessageManager(models.Manager):
             Friend.objects.filter(
                 user=kwargs['to_user'], friend_of=kwargs['from_user']
             ).exists()
-            or
-            Friend.objects.filter(
+            or Friend.objects.filter(
                 user=kwargs['from_user'], friend_of=kwargs['to_user']
             ).exists()
         )
