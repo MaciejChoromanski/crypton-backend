@@ -189,7 +189,7 @@ class Message(models.Model):
         User, on_delete=models.CASCADE, related_name='from_user_message'
     )
     is_new = models.BooleanField(default=True)
-    sent_on = models.DateField(default=now, editable=False)
+    sent_on = models.DateTimeField(default=now, editable=False)
 
     objects = MessageManager()
 
