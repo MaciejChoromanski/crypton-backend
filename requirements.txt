@@ -2,7 +2,7 @@ appdirs==1.4.4
 asgiref==3.2.10
 cfgv==3.1.0
 distlib==0.3.1
-Django==3.0.8
+Django==3.0.12
 django-redis==4.12.1
 djangorestframework==3.11.0
 filelock==3.0.12
